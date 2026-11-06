@@ -1,0 +1,15 @@
+{
+  "name": "bedrock-loom-v2",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Bedrock Loom v2：既有项目的审查与扩展（零覆盖），平台侧能力可自动验证。",
+  "scripts": {
+    "build:examples": "node services/build-example-pack.mjs",
+    "migrate": "node services/migrate-v1-to-v2.mjs",
+    "test": "node --test test/",
+    "evidence": "node test/run-evidence.mjs",
+    "typecheck": "tsc --noEmit -p contracts/tsconfig.json"
+  },
+  "engines": { "node": ">=22" }
+}

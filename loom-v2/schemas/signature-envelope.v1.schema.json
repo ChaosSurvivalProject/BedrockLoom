@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bedrockloom.dev/schemas/signature-envelope.v1.schema.json",
+  "title": "Bedrock Loom Signature Envelope v1",
+  "description": "签名保护范围 = manifest.json 规范化字节 + META/file-list.json 规范化字节（其中逐文件列出 files/ 下每一个文件的 sha256/size/path）。未列入清单的文件一律拒绝。",
+  "type": "object",
+  "required": ["schema", "algorithm", "keyId", "canonicalization", "protected", "payloadHash", "signature"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": { "const": "bedrockloom.signature-envelope/v1" },
+    "algorithm": { "const": "Ed25519" },
+    "keyId": { "type": "string", "minLength": 1 },
+    "signedBy": { "type": "string" },
+    "signedAt": { "type": "string", "format": "date-time" },
+    "canonicalization": {
+      "type": "object",
+      "required": ["method", "newline"],
+      "additionalProperties": false,
+      "properties": {
+        "method": { "const": "json-key-sorted-utf8" },
+        "newline": { "const": "LF" },
+        "encoding": { "const": "utf-8" }
+      }
+    },
+    "protected": {
+      "type": "array",
+      "description": "被签名的规范化对象摘要，顺序固定",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["path", "sha256", "bytes"],
+        "additionalProperties": false,
+        "properties": {
+          "path": { "enum": ["manifest.json", "META/file-list.json"] },
+          "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "bytes": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "payloadHash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "sha256( canonical(protected[0]) || LF || canonical(protected[1]) )"
+    },
+    "signature": { "type": "string", "pattern": "^[A-Za-z0-9+/=]{80,200}$", "description": "Ed25519 对 payloadHash 的 base64 签名" },
+    "trust": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "publisher": { "type": "string" },
+        "keyFingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "revoked": { "type": "boolean" },
+        "revocationReason": { "type": "string" }
+      }
+    }
+  }
+}

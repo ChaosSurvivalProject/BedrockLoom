@@ -1,0 +1,63 @@
+{
+  "schema": "bedrockloom.repo-index/v2",
+  "source": {
+    "id": "official-demo",
+    "kind": "official",
+    "displayName": "Bedrock Loom 官方示例源",
+    "baseUrl": "https://repo.bedrockloom.example/index.json",
+    "mirrors": [],
+    "trust": "trusted",
+    "priority": 0,
+    "signatureKeys": [
+      {
+        "keyId": "loom-demo-ed25519",
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAJHK/K7xLFC4W9K7g4ylLJsiQmsnzQNdKVQuEIqdkh1I=\n-----END PUBLIC KEY-----\n",
+        "fingerprint": "40bb524e884c6c61df6a9b82781a9779a321121739c3a5dc145f18cd6cd9d62c",
+        "validFrom": "2026-11-01T00:00:00.000Z",
+        "validUntil": "2027-11-01T00:00:00.000Z"
+      }
+    ],
+    "offlineCache": {
+      "cachedAt": "2026-11-06T04:01:11.780Z",
+      "staleAfterHours": 72
+    }
+  },
+  "generatedAt": "2026-11-06T04:01:11.780Z",
+  "sequence": 1,
+  "delta": false,
+  "entries": [
+    {
+      "modId": "example.loom_blade",
+      "version": "1.1.0",
+      "action": "publish",
+      "requiresManager": "2.0.0",
+      "clientVersionRange": ">=1.21.130",
+      "loaderApiRange": ">=1.0.0 <2.0.0",
+      "permissions": [
+        "presentation.local",
+        "storage.world",
+        "input.local",
+        "entity.observe.local"
+      ],
+      "breaking": false,
+      "changelog": "由 v1.1 迁移；新增 capabilities/stageContracts/签名覆盖文件清单",
+      "artifact": {
+        "path": "packs/example.loom_blade-1.1.0.loompack",
+        "sha256": "fe7f19ce3082c2c259dac59dfbfa30b8",
+        "size": 37391,
+        "resumeSupported": true
+      },
+      "sourceOfRecord": "official-demo"
+    }
+  ],
+  "revocations": [
+    {
+      "modId": "example.old_mod",
+      "version": "0.9.0",
+      "reason": "签名密钥轮换，旧包不再分发",
+      "revokedAt": "2026-11-06T04:01:11.780Z",
+      "replacement": "example.old_mod@1.0.0"
+    }
+  ],
+  "indexSignature": "k9n5GXVEu3B2Tf9dpmWIQmH1s3cRI6e8O9+nsCA4/PUvqlxKci82sahpHo8/tLDNS7sa5KqBAQqndyJSUn/VBQ=="
+}

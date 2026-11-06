@@ -1,0 +1,14 @@
+{
+  "format_version": "1.8.0",
+  "animations": {
+    "animation.bedrockloom.loom_blade_idle": {
+      "loop": true,
+      "bones": {"blade": {"rotation": [0, "Math.sin(query.anim_time * 2.0) * 2.0", 0]}}
+    },
+    "animation.bedrockloom.loom_blade_attack": {
+      "loop": false,
+      "animation_length": 0.35,
+      "bones": {"root": {"rotation": {"0.0": [0, 0, 0], "0.12": [-28, 0, 0], "0.35": [0, 0, 0]}}}
+    }
+  }
+}

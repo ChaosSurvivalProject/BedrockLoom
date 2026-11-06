@@ -1,0 +1,15 @@
+{
+  "schema": "bedrockloom.mod/v1",
+  "id": "example.loom_blade",
+  "name": "Loom Blade Example",
+  "version": "1.1.0",
+  "loader": {"id": "bedrockloom", "range": ">=1.0.0 <2.0.0"},
+  "entrypoints": {"client": "behavior_pack/scripts/main.js"},
+  "dependencies": {"bedrockloom": ">=1.0.0"},
+  "resources": {"namespace": "bedrockloom", "roots": ["resource_pack", "behavior_pack"]},
+  "permissions": ["presentation.local", "storage.world:example.loom_blade", "input.local", "entity.observe.local"],
+  "api": {"version": "1.1", "classes": ["ClientEventBus", "PermissionGate", "ModelApi", "MaterialApi", "AnimationApi", "ParticleApi", "SoundApi", "ScreenUiApi", "WorldUiApi", "InputApi", "CameraApi", "EntityApi", "StorageApi", "CapabilityProbe"]},
+  "render": {"target": "R0", "international": "R1-candidate", "netease": "platform-dependent", "custom": "R2-R3-by-authorization"},
+  "protocol": {"accept": ["blsp/1"], "server_requests": ["particle", "sound", "animation", "ui_notice", "camera_pulse"]},
+  "features": {"netease": false}
+}

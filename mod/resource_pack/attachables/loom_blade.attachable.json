@@ -1,0 +1,18 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:attachable": {
+    "description": {
+      "identifier": "bedrockloom:loom_blade",
+      "materials": {"default": "entity_alphatest"},
+      "textures": {"default": "textures/items/loom_blade"},
+      "geometry": {"default": "geometry.bedrockloom.loom_blade"},
+      "animations": {
+        "idle": "animation.bedrockloom.loom_blade_idle",
+        "attack": "animation.bedrockloom.loom_blade_attack",
+        "controller": "controller.render.bedrockloom.loom_blade"
+      },
+      "scripts": {"animate": ["controller"]},
+      "render_controllers": ["controller.render.bedrockloom.loom_blade"]
+    }
+  }
+}

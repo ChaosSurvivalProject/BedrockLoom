@@ -1,0 +1,140 @@
+{
+  "schema": "bedrockloom.file-list/v1",
+  "hashAlgorithm": "sha256",
+  "entries": [
+    {
+      "path": "files/assets/icon.png",
+      "sha256": "69bc888e14614a2c8ad1cb74c60ac80b929984f08b18e2152fabcd4771811391",
+      "size": 376,
+      "mode": "0644"
+    },
+    {
+      "path": "files/assets/README.txt",
+      "sha256": "e27b7e22e40e610ac487dc7d46b3370b8d4f6931c5897cc5d02e3264976eba52",
+      "size": 90,
+      "mode": "0644"
+    },
+    {
+      "path": "files/behavior_pack/items/loom_blade.json",
+      "sha256": "a7ae25ca483c35a53ab8b6a855ae6478fd8626b95dc433f5e6b257ec0e3a38a2",
+      "size": 835,
+      "mode": "0644"
+    },
+    {
+      "path": "files/behavior_pack/manifest.json",
+      "sha256": "31698821012db0ce62438730c47a6df4e7558f42369b81fa0f37d86840f95962",
+      "size": 819,
+      "mode": "0644"
+    },
+    {
+      "path": "files/behavior_pack/recipes/loom_blade.json",
+      "sha256": "646321cae7e24f427ac82e696d5c049adf8da9c5c3aa84cf6cf379666ede4146",
+      "size": 412,
+      "mode": "0644"
+    },
+    {
+      "path": "files/behavior_pack/scripts/api/capability_probe.js",
+      "sha256": "1341abfd39fa0cbb095805063b3a9ce009d67f706039ddbad7e1ec6239fcef42",
+      "size": 6499,
+      "mode": "0644"
+    },
+    {
+      "path": "files/behavior_pack/scripts/api/client_api.js",
+      "sha256": "953489181a64f86cc06aa84d8c5df996da7015038d628d892a95a06bf4c911d3",
+      "size": 12795,
+      "mode": "0644"
+    },
+    {
+      "path": "files/behavior_pack/scripts/api/self_test.js",
+      "sha256": "b0881c484cf41e2ae31ff46af557d1d15e3852a1720a4ecd7f83950546930d4f",
+      "size": 1943,
+      "mode": "0644"
+    },
+    {
+      "path": "files/behavior_pack/scripts/main.js",
+      "sha256": "e6835931e31be34c63263c14e3f6c1a356f319a705b9d11dee4037adcde8ff16",
+      "size": 4662,
+      "mode": "0644"
+    },
+    {
+      "path": "files/behavior_pack/scripts/runtime.js",
+      "sha256": "9c170c9b205df870f1f9db076a80bac8386edf6569c0ef963019efe894570a74",
+      "size": 3833,
+      "mode": "0644"
+    },
+    {
+      "path": "files/resource_pack/animation_controllers/loom_blade.animation_controllers.json",
+      "sha256": "e4b21ee7a03de174bbe725b6e326f964404bdef47ecd26c37a396905dd5c63f4",
+      "size": 370,
+      "mode": "0644"
+    },
+    {
+      "path": "files/resource_pack/animations/loom_blade.animation.json",
+      "sha256": "ef31a018ef72508c72ce527545fac44cc8c27d7529a471e8d43f9946f27eb59e",
+      "size": 423,
+      "mode": "0644"
+    },
+    {
+      "path": "files/resource_pack/attachables/loom_blade.attachable.json",
+      "sha256": "afa8ae2001cfa327dba236093036007d362e0238127f44e9c2ca38e990252ce8",
+      "size": 650,
+      "mode": "0644"
+    },
+    {
+      "path": "files/resource_pack/manifest.json",
+      "sha256": "c9851f65021a25311a2754cfaa37421d1c3762be5fac37d7bfaf677ed4d5f656",
+      "size": 720,
+      "mode": "0644"
+    },
+    {
+      "path": "files/resource_pack/models/entity/loom_blade.geo.json",
+      "sha256": "b78928c2add42745e7da03bd88d5670dd96a2e99c4f30a0b68c3093eebb8852f",
+      "size": 940,
+      "mode": "0644"
+    },
+    {
+      "path": "files/resource_pack/particles/loom_spark.particle.json",
+      "sha256": "b575e63d8c44a95dcf06d5bf1e43756163a8f7bd6033eae2a85e47d52ee43bcc",
+      "size": 867,
+      "mode": "0644"
+    },
+    {
+      "path": "files/resource_pack/render_controllers/loom_blade.render_controllers.json",
+      "sha256": "1754dbca8518773b2ca638e475d689f30ab3244d021187b4bd261409fa0cc7b0",
+      "size": 243,
+      "mode": "0644"
+    },
+    {
+      "path": "files/resource_pack/sounds/sound_definitions.json",
+      "sha256": "1e5445fa4eb6b19e2439774e2db6aac38806cac795d9bd85b2492a0d67c3b671",
+      "size": 220,
+      "mode": "0644"
+    },
+    {
+      "path": "files/resource_pack/texts/en_US.lang",
+      "sha256": "278cad4b9367c76b3cf4dea4456d0a404c57b23277a75ff3ace80536f7600b6a",
+      "size": 77,
+      "mode": "0644"
+    },
+    {
+      "path": "files/resource_pack/texts/zh_CN.lang",
+      "sha256": "c0c3d853892a7044459796266808703a99bd9f0f222d3578ad65be511122e1d1",
+      "size": 81,
+      "mode": "0644"
+    },
+    {
+      "path": "files/resource_pack/textures/item_texture.json",
+      "sha256": "8e8c792466f12a21dfd71bc6e4dadd6826732944eccd44017329880cd2c3cb6b",
+      "size": 160,
+      "mode": "0644"
+    },
+    {
+      "path": "files/resource_pack/textures/items/loom_blade.png",
+      "sha256": "69bc888e14614a2c8ad1cb74c60ac80b929984f08b18e2152fabcd4771811391",
+      "size": 376,
+      "mode": "0644"
+    }
+  ],
+  "totalBytes": 37391,
+  "count": 22
+}

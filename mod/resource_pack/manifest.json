@@ -1,0 +1,40 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "Bedrock Loom 客户端模组平台",
+    "description": "Bedrock Loom 1.0 示例资源包：武器模型、动画、粒子、音效与本地 UI",
+    "uuid": "b2c9b6b0-92f8-4d72-8498-c975473e6adf",
+    "version": [
+      1,
+      0,
+      0
+    ],
+    "min_engine_version": [
+      1,
+      21,
+      0
+    ]
+  },
+  "modules": [
+    {
+      "type": "resources",
+      "uuid": "cfaf52c0-a6fe-4229-9610-e45cd9d3220e",
+      "version": [
+        1,
+        0,
+        0
+      ],
+      "description": "资源"
+    }
+  ],
+  "dependencies": [
+    {
+      "uuid": "2b73eec6-6639-4eda-9f6a-309f6037f565",
+      "version": [
+        1,
+        0,
+        0
+      ]
+    }
+  ]
+}

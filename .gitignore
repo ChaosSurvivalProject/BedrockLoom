@@ -1,0 +1,20 @@
+# 构建与运行垃圾
+node_modules/
+build/
+dist/
+coverage/
+.nyc_output/
+*.tsbuildinfo
+*.log
+.DS_Store
+*.class
+
+# 本项目工具数据（非交付内容）
+.codebuddy/
+
+# 演示签名私钥：仅用于本地示例复验，绝不入库。
+# 运行 `node loom-v2/services/build-example-pack.mjs` 会自动重新生成并重新签名示例。
+loom-v2/examples/demo-private-key.pem
+
+# 发布压缩包由 GitHub Releases 提供，不重复入库
+/*.zip

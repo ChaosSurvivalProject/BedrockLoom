@@ -1,0 +1,11 @@
+{
+  "namespace": "bedrockloom",
+  "loom_blade_badge": {
+    "type": "panel",
+    "size": ["100%", 24],
+    "anchor_from": "top_right",
+    "anchor_to": "top_right",
+    "offset": [-8, 8],
+    "controls": [{"loom_blade_label": {"type": "label", "text": "Bedrock Loom  •  LOCAL VISUALS", "color": [0.35, 0.9, 1.0], "font_size": 10}}]
+  }
+}

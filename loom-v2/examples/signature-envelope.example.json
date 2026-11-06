@@ -1,0 +1,31 @@
+{
+  "schema": "bedrockloom.signature-envelope/v1",
+  "algorithm": "Ed25519",
+  "keyId": "loom-demo-ed25519",
+  "signedBy": "Bedrock Loom Demo",
+  "signedAt": "2026-11-06T04:01:11.779Z",
+  "canonicalization": {
+    "method": "json-key-sorted-utf8",
+    "newline": "LF",
+    "encoding": "utf-8"
+  },
+  "protected": [
+    {
+      "path": "manifest.json",
+      "sha256": "227a316443e8adb254f97fd9846695aaf1633cca8dd4bdf399a58ddbd9c3a008",
+      "bytes": 13899
+    },
+    {
+      "path": "META/file-list.json",
+      "sha256": "bb4700a28e45c81db22617d38a2471b6874e4037a52084e1a42783c9a02a29a9",
+      "bytes": 3589
+    }
+  ],
+  "payloadHash": "c238e9330ab62acd73d69aee8d15c3a1cf2418e573adfdf5cfb548126b6fee67",
+  "signature": "P8h7JAZ9lt26QIuCJitf8Cwj5utNlH4SRszeQVQ03KM5nKuFnD6DmPvjrhoXQIBUC71OG2dVsF0IiduqVFmbBw==",
+  "trust": {
+    "publisher": "Bedrock Loom Demo",
+    "keyFingerprint": "40bb524e884c6c61df6a9b82781a9779a321121739c3a5dc145f18cd6cd9d62c",
+    "revoked": false
+  }
+}

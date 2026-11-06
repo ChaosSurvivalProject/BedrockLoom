@@ -1,0 +1,270 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bedrockloom.dev/schemas/mod-package.v2.schema.json",
+  "title": "Bedrock Loom Mod Package Manifest v2",
+  "type": "object",
+  "required": ["schema", "identity", "version", "loader", "client", "dependencies", "entrypoints", "resources", "permissions", "capabilities", "signature", "content", "provenance"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": { "const": "bedrockloom.mod/v2" },
+    "identity": {
+      "type": "object",
+      "description": "稳定 ID 与用户可见名称分离；ID 永不随改名变化",
+      "required": ["id", "name"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,95}$" },
+        "name": { "$ref": "#/$defs/i18nText" },
+        "description": { "$ref": "#/$defs/i18nText" },
+        "authors": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "license": { "type": "string", "minLength": 1, "description": "SPDX 标识符或明确的素材许可说明" },
+        "homepage": { "type": "string", "format": "uri" },
+        "source": { "type": "string", "format": "uri" },
+        "icon": { "type": "string", "pattern": "^files/assets/[A-Za-z0-9._/-]+\\.(png|jpg|webp)$" },
+        "assetLicenses": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["path", "license"],
+            "additionalProperties": false,
+            "properties": { "path": { "type": "string" }, "license": { "type": "string" }, "attribution": { "type": "string" } }
+          }
+        }
+      }
+    },
+    "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$" },
+    "loader": {
+      "type": "object",
+      "required": ["id", "apiRange"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "const": "bedrockloom" },
+        "apiRange": { "type": "string", "minLength": 1, "description": "SemVer 范围，例如 >=2.0.0 <3.0.0" },
+        "minManagerVersion": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" }
+      }
+    },
+    "client": {
+      "type": "object",
+      "required": ["distribution", "clientVersionRange", "platformAdapters", "capabilityMap"],
+      "additionalProperties": false,
+      "properties": {
+        "distribution": { "enum": ["international", "netease", "custom"] },
+        "clientVersionRange": { "type": "string", "minLength": 1, "description": "最低/最高客户端版本，必须写明具体基线，例如 >=1.21.130" },
+        "platformAdapters": { "type": "array", "items": { "enum": ["international", "netease", "custom"] }, "minItems": 1, "uniqueItems": true },
+        "moduleVersions": {
+          "type": "object",
+          "description": "原生 manifest 的模块版本映射建议（迁移输出；requiresVerification=true 时不得直接写入原生包）",
+          "additionalProperties": { "type": "string" }
+        },
+        "capabilityMap": {
+          "type": "object",
+          "description": "国际版/网易/定制客户端能力映射；只允许登记状态，不得声称等价",
+          "required": ["international"],
+          "additionalProperties": false,
+          "properties": {
+            "international": { "type": "array", "items": { "$ref": "#/$defs/capabilityDecl" } },
+            "netease": { "type": "array", "items": { "$ref": "#/$defs/capabilityDecl" } },
+            "custom": { "type": "array", "items": { "$ref": "#/$defs/capabilityDecl" } }
+          }
+        },
+        "graphicsMode": { "enum": ["default", "vibrant-visuals", "any"] }
+      }
+    },
+    "dependencies": {
+      "type": "object",
+      "required": ["requires"],
+      "additionalProperties": false,
+      "properties": {
+        "requires": { "type": "array", "items": { "$ref": "#/$defs/dependency" } },
+        "optional": { "type": "array", "items": { "$ref": "#/$defs/dependency" } },
+        "conflicts": { "type": "array", "items": { "$ref": "#/$defs/dependency" } },
+        "breaks": { "type": "array", "items": { "$ref": "#/$defs/dependency" } },
+        "provides": { "type": "array", "items": { "type": "string", "pattern": "^[a-z0-9._-]+(:[a-z0-9._-]+)?$" }, "description": "服务实现 ID；同一服务多个实现必须显式冲突解释" },
+        "resourceNamespaces": { "type": "array", "items": { "type": "string", "pattern": "^[a-z0-9_.-]+$" } },
+        "inputBindings": { "type": "array", "items": { "type": "string" } },
+        "hudSlots": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "entrypoints": {
+      "type": "object",
+      "required": ["client"],
+      "additionalProperties": false,
+      "properties": {
+        "client": { "type": "string", "pattern": "^files/[A-Za-z0-9._/-]+\\.js$" },
+        "additional": { "type": "object", "additionalProperties": { "type": "string" } }
+      }
+    },
+    "resources": {
+      "type": "object",
+      "required": ["namespace", "roots"],
+      "additionalProperties": false,
+      "properties": {
+        "namespace": { "type": "string", "pattern": "^[a-z0-9_.-]+$" },
+        "roots": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^files/(behavior_pack|resource_pack|assets)$" } },
+        "packs": { "type": "array", "items": { "type": "string" }, "description": "原生包目录相对路径，供迁移核对" }
+      }
+    },
+    "permissions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "scope", "risk"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z][a-z0-9._-]*(:[A-Za-z0-9._-]+)?$" },
+          "scope": { "enum": ["local", "world", "player", "network", "account", "input", "notification", "native"] },
+          "risk": { "enum": ["low", "medium", "high", "critical"] },
+          "plainReason": { "type": "string", "description": "通俗说明，安装前展示" },
+          "technicalDetail": { "type": "string", "description": "技术实现说明，双层描述" }
+        }
+      }
+    },
+    "config": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": { "type": "integer", "minimum": 1 },
+        "schema": { "type": "object" },
+        "defaults": { "type": "object" },
+        "layers": { "type": "array", "items": { "enum": ["global", "world", "player"] } },
+        "requiresRestart": { "type": "array", "items": { "type": "string" } },
+        "sensitive": { "type": "array", "items": { "type": "string" }, "description": "敏感项：脱敏显示，令牌不写普通配置" }
+      }
+    },
+    "capabilities": {
+      "type": "array",
+      "description": "取代 v1 的 api.classes[]；每项必须带状态与证据",
+      "items": { "$ref": "#/$defs/capabilityDecl" }
+    },
+    "stageContracts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["stage", "intervention", "actualInterventionPoint"],
+        "additionalProperties": false,
+        "properties": {
+          "stage": { "enum": ["ResourceBuild", "ResourceLoad", "SimulationSync", "SceneUpdate", "CullAndSort", "GeometrySubmit", "RenderLayer", "PostProcess", "UiDraw", "FramePresent"] },
+          "intervention": { "enum": ["direct-control", "indirect-influence", "observe-only", "inaccessible"] },
+          "actualInterventionPoint": { "type": "string", "minLength": 1, "description": "必须点名具体函数/资源路径，禁止写'底层自动处理'" }
+        }
+      }
+    },
+    "signature": {
+      "type": "object",
+      "required": ["envelope", "algorithm", "keyId"],
+      "additionalProperties": false,
+      "properties": {
+        "envelope": { "const": "signature.json" },
+        "algorithm": { "const": "Ed25519" },
+        "keyId": { "type": "string", "minLength": 1 },
+        "signedBy": { "type": "string" },
+        "signedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "content": {
+      "type": "object",
+      "required": ["fileList", "hashAlgorithm", "manifestHash"],
+      "additionalProperties": false,
+      "properties": {
+        "fileList": { "const": "META/file-list.json" },
+        "hashAlgorithm": { "const": "sha256" },
+        "manifestHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "totalBytes": { "type": "integer", "minimum": 0 },
+        "fingerprint": { "type": "string", "description": "全包指纹，能力报告缓存键组成部分" }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["sourceId", "sourceKind", "installedFrom"],
+      "additionalProperties": false,
+      "properties": {
+        "sourceId": { "type": "string" },
+        "sourceKind": { "enum": ["official", "community", "private", "local-file", "drag-drop", "clipboard"] },
+        "installedFrom": { "type": "string", "description": "实际来源；一个模组可有多个候选来源，但安装记录必须唯一" },
+        "mirrorOf": { "type": "string" },
+        "cachedAt": { "type": "string", "format": "date-time" },
+        "trustState": { "enum": ["trusted", "untrusted", "unknown", "revoked"] }
+      }
+    },
+    "compatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "minClientBuild": { "type": "string" },
+        "maxClientBuild": { "type": "string" },
+        "requiresExperiments": { "type": "array", "items": { "type": "string" } },
+        "knownIssues": { "type": "array", "items": { "type": "string" } },
+        "deprecatedSince": { "type": "string" },
+        "replacedBy": { "type": "string" },
+        "minManagerVersion": { "type": "string" }
+      }
+    },
+    "migration": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fromSchema": { "enum": ["bedrockloom.mod/v1", "bedrockloom.mod/v2"] },
+        "notes": { "type": "array", "items": { "type": "string" } },
+        "requiresVerification": { "type": "boolean", "description": "迁移生成的字段（如 moduleVersions）需真机核对，不得直接写回原生包" }
+      }
+    },
+    "i18n": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "defaultLocale": { "type": "string", "pattern": "^[a-z]{2}_[A-Z]{2}$" },
+        "locales": { "type": "array", "items": { "type": "string" } },
+        "changelog": { "type": "string" },
+        "screenshots": { "type": "array", "items": { "type": "string" } },
+        "media": { "type": "array", "items": { "type": "string", "format": "uri" } },
+        "releaseDate": { "type": "string", "format": "date" },
+        "supportedVersions": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "api": {
+      "type": "object",
+      "description": "v1 兼容字段，允许存在以读取旧包；v2 校验器不强依赖",
+      "additionalProperties": false,
+      "properties": { "version": { "type": "string" }, "classes": { "type": "array", "items": { "type": "string" } } }
+    },
+    "render": { "type": "object", "description": "v1 兼容字段；v2 以 stageContracts + capabilities 为准" },
+    "protocol": { "type": "object", "description": "v1 兼容字段" },
+    "features": { "type": "object", "description": "v1 兼容字段" }
+  },
+  "$defs": {
+    "i18nText": {
+      "oneOf": [
+        { "type": "string", "minLength": 1 },
+        { "type": "object", "minProperties": 1, "additionalProperties": { "type": "string" } }
+      ]
+    },
+    "dependency": {
+      "type": "object",
+      "required": ["id", "range"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,95}$" },
+        "range": { "type": "string", "minLength": 1 },
+        "optional": { "type": "boolean" },
+        "reason": { "type": "string" }
+      }
+    },
+    "capabilityDecl": {
+      "type": "object",
+      "required": ["id", "status", "evidenceLevel", "evidenceDomain"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["Stable", "Candidate", "Experimental", "BuildTimeOnly", "PlatformRestricted", "CustomClientOnly", "Unavailable"] },
+        "evidenceLevel": { "enum": ["E0", "E1", "E2", "E3", "E4", "E5"] },
+        "evidenceDomain": { "enum": ["platform-side", "in-game", "custom-client"] },
+        "stage": { "type": "string" },
+        "intervention": { "enum": ["direct-control", "indirect-influence", "observe-only", "inaccessible"] },
+        "actualInterventionPoint": { "type": "string" },
+        "clientBuild": { "type": "string" },
+        "testDate": { "type": "string" },
+        "sources": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

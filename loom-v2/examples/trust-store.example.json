@@ -1,0 +1,11 @@
+{
+  "schema": "bedrockloom.trust-store/v1",
+  "keys": [
+    {
+      "keyId": "loom-demo-ed25519",
+      "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAJHK/K7xLFC4W9K7g4ylLJsiQmsnzQNdKVQuEIqdkh1I=\n-----END PUBLIC KEY-----\n",
+      "fingerprint": "40bb524e884c6c61df6a9b82781a9779a321121739c3a5dc145f18cd6cd9d62c",
+      "revoked": false
+    }
+  ]
+}

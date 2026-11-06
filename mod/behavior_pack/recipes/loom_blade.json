@@ -1,0 +1,14 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {"identifier": "bedrockloom:loom_blade"},
+    "tags": ["crafting_table"],
+    "pattern": [" C ","CSC"," I "],
+    "key": {
+      "C": {"item": "minecraft:copper_ingot"},
+      "S": {"item": "minecraft:string"},
+      "I": {"item": "minecraft:iron_ingot"}
+    },
+    "result": {"item": "bedrockloom:loom_blade", "count": 1}
+  }
+}

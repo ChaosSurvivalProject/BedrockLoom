@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bedrockloom.dev/schemas/transaction-log.v1.schema.json",
+  "title": "Bedrock Loom Transaction Log v1",
+  "description": "安装/升级/卸载/启用/禁用/依赖修复/资源加载/世界进入退出/适配器切换的原子事务日志。崩溃恢复只依赖本日志与 immutable 备份。",
+  "type": "object",
+  "required": ["schema", "transactions"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": { "const": "bedrockloom.txlog/v1" },
+    "transactions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["txId", "kind", "modId", "state", "createdAt", "events"],
+        "additionalProperties": false,
+        "properties": {
+          "txId": { "type": "string", "pattern": "^tx-[a-f0-9]{16}$" },
+          "kind": { "enum": ["install", "upgrade", "uninstall", "enable", "disable", "dependency-repair", "resource-load", "world-enter", "world-exit", "adapter-switch"] },
+          "modId": { "type": "string" },
+          "fromVersion": { "type": "string" },
+          "toVersion": { "type": "string" },
+          "state": { "enum": ["INIT", "PRECHECK", "STAGING", "BACKUP", "COMMIT_PENDING", "COMMITTED", "VERIFY", "DONE", "ABORTING", "ABORTED", "RECOVERY_REQUIRED", "SAFE_MODE"] },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" },
+          "cancelPoints": { "type": "array", "items": { "type": "string" }, "description": "允许取消的状态列表" },
+          "rollbackPoint": { "type": "string", "description": "最后一个可回滚状态" },
+          "backupPath": { "type": "string", "description": "更新前备份；回滚依据" },
+          "stagingPath": { "type": "string" },
+          "error": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": { "code": { "type": "string" }, "message": { "type": "string" }, "phase": { "type": "string" } }
+          },
+          "events": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["at", "from", "to", "event"],
+              "additionalProperties": false,
+              "properties": {
+                "at": { "type": "string", "format": "date-time" },
+                "from": { "type": "string" },
+                "to": { "type": "string" },
+                "event": { "type": "string" },
+                "detail": { "type": "string" },
+                "canCancel": { "type": "boolean" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

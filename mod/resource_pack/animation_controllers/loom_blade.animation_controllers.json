@@ -1,0 +1,12 @@
+{
+  "format_version": "1.10.0",
+  "animation_controllers": {
+    "controller.render.bedrockloom.loom_blade": {
+      "initial_state": "idle",
+      "states": {
+        "idle": {"animations": ["idle"], "transitions": [{"attack": "query.is_using_item"}]},
+        "attack": {"animations": ["attack"], "transitions": [{"idle": "!query.is_using_item"}]}
+      }
+    }
+  }
+}

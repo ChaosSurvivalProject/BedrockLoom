@@ -1,0 +1,7 @@
+{
+  "resource_pack_name": "bedrockloom",
+  "texture_name": "atlas.items",
+  "texture_data": {
+    "loom_blade": {"textures": "textures/items/loom_blade"}
+  }
+}

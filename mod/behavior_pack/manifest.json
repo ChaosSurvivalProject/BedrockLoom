@@ -1,0 +1,18 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "Bedrock Loom 客户端模组平台",
+    "description": "Bedrock Loom 1.0 示例行为包：本地武器、生命周期与安全表现协议",
+    "uuid": "2b73eec6-6639-4eda-9f6a-309f6037f565",
+    "version": [1, 0, 0],
+    "min_engine_version": [1, 21, 0]
+  },
+  "modules": [
+    {"type": "data", "uuid": "2f6d42a0-8a6c-4e44-ac79-3e1825c8d4ee", "version": [1, 0, 0], "description": "行为"},
+    {"type": "script", "language": "javascript", "entry": "scripts/main.js", "uuid": "6a0b7e0d-0c93-4b4a-bf67-0dbb9744f2ad", "version": [1, 0, 0], "description": "Bedrock Loom 本地客户端运行时"}
+  ],
+  "dependencies": [
+    {"uuid": "b2c9b6b0-92f8-4d72-8498-c975473e6adf", "version": [1, 0, 0]},
+    {"module_name": "@minecraft/server", "version": "1.14.0"}
+  ]
+}

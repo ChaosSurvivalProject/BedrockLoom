@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bedrockloom.dev/schemas/repository-index.v2.schema.json",
+  "title": "Bedrock Loom Repository Index v2",
+  "description": "仓库索引：支持全量/增量、签名密钥、优先级、镜像、撤销机制；一个模组允许多个来源但安装记录必须明确实际来源。",
+  "type": "object",
+  "required": ["schema", "source", "generatedAt", "sequence", "entries"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": { "const": "bedrockloom.repo-index/v2" },
+    "source": {
+      "type": "object",
+      "required": ["id", "kind", "trust", "priority", "signatureKeys"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,63}$" },
+        "kind": { "enum": ["official", "community", "private"] },
+        "displayName": { "type": "string" },
+        "baseUrl": { "type": "string", "format": "uri" },
+        "mirrors": { "type": "array", "items": { "type": "string", "format": "uri" } },
+        "trust": { "enum": ["trusted", "untrusted", "unknown", "revoked"] },
+        "priority": { "type": "integer", "minimum": 0, "description": "数值小者优先；不静默降级，降权必须显示警告" },
+        "signatureKeys": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["keyId", "publicKey", "fingerprint"],
+            "additionalProperties": false,
+            "properties": {
+              "keyId": { "type": "string" },
+              "publicKey": { "type": "string", "description": "Ed25519 公钥 PEM（base64 主体）" },
+              "fingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+              "validFrom": { "type": "string", "format": "date-time" },
+              "validUntil": { "type": "string", "format": "date-time" }
+            }
+          }
+        },
+        "offlineCache": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": { "cachedAt": { "type": "string", "format": "date-time" }, "staleAfterHours": { "type": "integer" } }
+        }
+      }
+    },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "sequence": { "type": "integer", "minimum": 0, "description": "单调递增；增量索引基于 baseSequence 应用" },
+    "baseSequence": { "type": "integer", "minimum": 0, "description": "增量包所基于的序号" },
+    "delta": { "type": "boolean", "default": false },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["modId", "version", "action", "artifact"],
+        "additionalProperties": false,
+        "properties": {
+          "modId": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,95}$" },
+          "version": { "type": "string" },
+          "action": { "enum": ["publish", "update", "revoke"] },
+          "reason": { "type": "string", "description": "revoke 必须给出原因" },
+          "requiresManager": { "type": "string" },
+          "clientVersionRange": { "type": "string" },
+          "loaderApiRange": { "type": "string" },
+          "permissions": { "type": "array", "items": { "type": "string" } },
+          "breaking": { "type": "boolean" },
+          "changelog": { "type": "string" },
+          "artifact": {
+            "type": "object",
+            "required": ["path", "sha256", "size"],
+            "additionalProperties": false,
+            "properties": {
+              "path": { "type": "string" },
+              "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+              "size": { "type": "integer", "minimum": 0 },
+              "resumeSupported": { "type": "boolean", "description": "下载断点续传" }
+            }
+          },
+          "sourceOfRecord": { "type": "string", "description": "实际来源记录；同一 modId 多来源时必须逐条标明" }
+        }
+      }
+    },
+    "revocations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["modId", "version", "reason", "revokedAt"],
+        "additionalProperties": false,
+        "properties": {
+          "modId": { "type": "string" },
+          "version": { "type": "string" },
+          "reason": { "type": "string" },
+          "revokedAt": { "type": "string", "format": "date-time" },
+          "replacement": { "type": "string" }
+        }
+      }
+    },
+    "indexSignature": { "type": "string", "description": "对整个索引（不含本字段）的 Ed25519 签名 base64" }
+  }
+}

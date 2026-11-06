@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bedrock Loom · 模组管理器（离线）</title>
+<style>
+:root{
+  --bg:#0d1117; --panel:#151b24; --panel2:#1b2330; --line:#28313f; --text:#e6edf5;
+  --muted:#8b98a9; --accent:#4da3ff; --accent2:#7c5cff; --ok:#3fb950; --warn:#d29922;
+  --bad:#f85149; --candidate:#a371f7; --chip:#202b3a; --radius:10px;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--accent)}
+.app{display:grid;grid-template-columns:236px 1fr;grid-template-rows:64px 1fr;min-height:100vh}
+header{grid-column:1/3;display:flex;align-items:center;gap:16px;padding:0 22px;border-bottom:1px solid var(--line);background:var(--panel)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;letter-spacing:.3px}
+.logo{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;font-size:15px;color:#fff}
+.badge{padding:2px 8px;border:1px solid var(--line);border-radius:999px;font-size:11px;color:var(--muted)}
+.hdr-stats{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.hdr-stats .badge b{color:var(--text)}
+nav{border-right:1px solid var(--line);background:var(--panel);padding:14px 10px;overflow:auto}
+nav .group{font-size:11px;color:var(--muted);letter-spacing:1px;padding:12px 10px 6px;text-transform:uppercase}
+nav button{display:flex;width:100%;align-items:center;gap:9px;text-align:left;background:transparent;border:0;border-radius:8px;padding:9px 11px;color:var(--muted);margin-bottom:2px}
+nav button:hover{background:var(--panel2);color:var(--text)}
+nav button.active{background:var(--chip);color:var(--text);box-shadow:inset 2px 0 var(--accent)}
+nav button .ico{width:18px;text-align:center;font-size:14px}
+main{padding:24px 28px;overflow:auto;max-width:1400px}
+h1{font-size:22px;margin:0 0 4px}
+h2{font-size:16px;margin:22px 0 10px}
+h3{font-size:14px;margin:0 0 8px}
+.sub{color:var(--muted);font-size:12.5px;margin:0 0 18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(330px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.between{justify-content:space-between}
+.tag{display:inline-block;padding:2px 8px;border:1px solid var(--line);border-radius:6px;font-size:11px;color:var(--muted);background:var(--chip)}
+.st{border-radius:999px;padding:2px 9px;font-size:11px;font-weight:600;white-space:nowrap}
+.st-installed,.st-builtin{background:rgba(63,185,80,.14);color:var(--ok)}
+.st-update-available{background:rgba(77,163,255,.14);color:var(--accent)}
+.st-disabled{background:rgba(139,152,169,.14);color:var(--muted)}
+.st-corrupt,.st-incompatible,.st-blocked{background:rgba(248,81,73,.14);color:var(--bad)}
+.st-external{background:rgba(163,113,247,.14);color:var(--candidate)}
+.btn{background:var(--chip);border:1px solid var(--line);border-radius:8px;padding:8px 14px;color:var(--text)}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:linear-gradient(135deg,#2b6fd6,#5a44d6);border-color:transparent;color:#fff;font-weight:600}
+.btn.danger{background:rgba(248,81,73,.12);border-color:rgba(248,81,73,.4);color:#ff9b95}
+.btn.ghost{background:transparent}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.sm{padding:5px 10px;font-size:12px}
+input[type=text],input[type=number],select,textarea{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+input[type=checkbox]{accent-color:var(--accent)}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.toolbar input[type=text]{min-width:220px;flex:1}
+.modcard{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column}
+.thumb{height:88px;background:linear-gradient(135deg,#1b2a44,#2a1b44);display:grid;place-items:center;color:#5b6b84;font-size:11px;border-bottom:1px solid var(--line)}
+.modcard .body{padding:13px;display:flex;flex-direction:column;gap:8px;flex:1}
+.modcard .name{font-weight:650;font-size:14px}
+.modcard .id{font-family:ui-monospace,Menlo,monospace;font-size:10.5px;color:var(--muted)}
+.mods-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.4px}
+tr:last-child td{border-bottom:0}
+.mono{font-family:ui-monospace,Menlo,monospace;font-size:11.5px}
+.dim{color:var(--muted)}
+.ok{color:var(--ok)}.bad{color:var(--bad)}.warn{color:var(--warn)}.acc{color:var(--accent)}
+.steps{display:flex;gap:6px;margin:6px 0 18px;flex-wrap:wrap}
+.step{flex:1;min-width:120px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px;font-size:12px;color:var(--muted)}
+.step.on{border-color:var(--accent);color:var(--text);background:rgba(77,163,255,.08)}
+.step.done{border-color:var(--ok);color:var(--ok)}
+.progress{height:8px;background:var(--bg);border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.progress>i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0;transition:width .25s}
+.kv{display:grid;grid-template-columns:120px 1fr;gap:6px 12px;font-size:12.5px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0}
+.notice{border-left:3px solid var(--warn);background:rgba(210,153,34,.08);padding:11px 13px;border-radius:0 8px 8px 0;font-size:12.5px;margin:10px 0}
+.notice.bad{border-color:var(--bad);background:rgba(248,81,73,.08)}
+.notice.ok{border-color:var(--ok);background:rgba(63,185,80,.08)}
+.notice.acc{border-color:var(--accent);background:rgba(77,163,255,.08)}
+.drawer-mask{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;z-index:20}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(560px,92vw);background:var(--panel);border-left:1px solid var(--line);z-index:21;transform:translateX(100%);transition:transform .2s;overflow:auto;padding:22px}
+.drawer.open{transform:none}
+.drawer-mask.open{display:block}
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 16px;z-index:40;display:none;box-shadow:0 8px 30px rgba(0,0,0,.4);font-size:12.5px}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:900px){.app{grid-template-columns:1fr}nav{display:none}.split{grid-template-columns:1fr}}
+.pill{font-size:10.5px;padding:1px 7px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);margin-top:10px}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px}
+.field{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}
+.field:last-child{border-bottom:0}
+.field label{font-size:12.5px}
+.hint{font-size:11px;color:var(--muted)}
+code{background:var(--chip);padding:1px 5px;border-radius:4px;font-size:11.5px}
+.risk-high{color:var(--bad);font-weight:600}
+.bar{height:6px;background:var(--bg);border-radius:999px;overflow:hidden;min-width:70px}
+.bar>i{display:block;height:100%;background:var(--accent)}
+.flow{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12px}
+.flow span{background:var(--chip);border:1px solid var(--line);padding:3px 9px;border-radius:6px}
+.flow b{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand"><span class="logo">BL</span> Bedrock Loom <span class="badge">模组管理器 v2</span></div>
+    <span class="badge">国际版 1.21.130</span>
+    <span class="badge">离线可用 · 不上传数据</span>
+    <div class="hdr-stats">
+      <span class="badge">Stable <b>20</b></span>
+      <span class="badge">Candidate <b>0</b></span>
+      <span class="badge">Experimental <b>20</b></span>
+      <span class="badge">Unavailable <b>14</b></span>
+    </div>
+  </header>
+  <nav id="nav"></nav>
+  <main id="view"></main>
+</div>
+<div class="drawer-mask" id="mask" data-action="close-drawer"></div>
+<div class="drawer" id="drawer"></div>
+<div id="toast"></div>
+
+<script>
+/* ---------------------------------------------------------------------------
+ * Bedrock Loom 离线图形模组管理器原型
+ * 界面层只使用内存数据与契约语义，不直接操作文件系统、不发起网络请求。
+ * 权威逻辑与自动化测试见 ../core/*.mjs、../services/*.mjs、../test/*.test.mjs。
+ * 本页所有标注"演示数据"的记录均为界面示例，不是真实已安装模组。
+ * ------------------------------------------------------------------------- */
+
+const STATES = {
+  installed:['已安装','st-installed'], builtin:['内置','st-builtin'],
+  external:['外部导入','st-external'], 'update-available':['可更新','st-update-available'],
+  disabled:['已禁用','st-disabled'], corrupt:['损坏','st-corrupt'],
+  incompatible:['不兼容','st-incompatible'], blocked:['被屏蔽','st-blocked']
+};
+
+const MODS = [
+  {id:'builtin.core',name:'Bedrock Loom 核心',version:'2.0.0',state:'builtin',author:'Bedrock Loom',license:'MIT',size:184320,category:'核心',tags:['加载器','内置'],source:'official',favorite:false,groups:['系统'],
+   perms:['resource.read','presentation.local'],caps:['服务注册发现','事件总线','权限门'],deps:[],conflicts:[],
+   contribution:{frameMs:0.4,memoryKb:512,objects:2,errors:0},changelog:'v2 平台侧能力：包格式、签名、依赖、事务、诊断。',releaseDate:'2026-11-06',supported:['1.21.130'],risk:'low'},
+  {id:'example.loom_blade',name:'织纹之刃',version:'1.1.0',state:'installed',author:'Bedrock Loom Contributors',license:'MIT',size:92392,category:'装备',tags:['武器','示例','本地表现'],source:'official',favorite:true,groups:['探索'],
+   perms:['presentation.local','storage.world','input.local','entity.observe.local'],caps:['静态模型 (R0)','粒子提交 (R1候选)','音效提交','action bar'],
+   deps:[{id:'builtin.core',range:'>=2.0.0 <3.0.0'}],conflicts:[],
+   contribution:{frameMs:1.2,memoryKb:840,objects:6,errors:0},changelog:'由 v1.1 迁移；新增 capabilities 与阶段合同。',releaseDate:'2026-11-06',supported:['1.21.130'],risk:'low',
+   stageContracts:[['ResourceBuild','间接影响','resource_pack/models/entity/*.geo.json + attachables/*'],['SimulationSync','间接影响','Player.spawnParticle / Player.playSound'],['UiDraw','间接影响','ScreenDisplay.setActionBar'],['GeometrySubmit','不可访问','无顶点缓冲提交接口']]},
+  {id:'fx.particle_plus',name:'粒子增强包',version:'2.3.0',state:'update-available',author:'Community FX',license:'Apache-2.0',size:245760,category:'视觉',tags:['粒子','特效'],source:'community',favorite:false,groups:['探索'],
+   perms:['presentation.local','graphics.settings'],caps:['预定义粒子模板','发射时模板变量 (E2)'],deps:[{id:'builtin.core',range:'>=2.0.0 <3.0.0'}],conflicts:[],
+   contribution:{frameMs:2.8,memoryKb:2100,objects:34,errors:1},changelog:'2.4.0 新增大气散射参数（重大更新 + 新增权限）。',releaseDate:'2026-10-20',supported:['1.21.130'],risk:'medium',
+   updateTo:{version:'2.4.0',breaking:true,addedPerms:['graphics.settings'],size:268000}},
+  {id:'ui.hud_suite',name:'HUD 组件库',version:'1.4.1',state:'installed',author:'UI Works',license:'MIT',size:131072,category:'界面',tags:['HUD','界面'],source:'official',favorite:true,groups:['界面'],
+   perms:['ui.screen','input.local'],caps:['action bar / title','HUD 元素可见性','模态表单'],deps:[{id:'builtin.core',range:'>=2.0.0'}],
+   conflicts:[{id:'fx.particle_plus',reason:'HUD 插槽 top_right 冲突；两者都声明 service.particle 实现'}],
+   contribution:{frameMs:0.9,memoryKb:640,objects:8,errors:0},changelog:'修复 DPI 缩放下的文字裁切。',releaseDate:'2026-09-12',supported:['1.21.130'],risk:'low'},
+  {id:'world.map_overlay',name:'地图叠加层',version:'0.9.2',state:'incompatible',author:'Map Lab',license:'GPL-3.0',size:512000,category:'世界',tags:['地图','世界表现'],source:'community',favorite:false,groups:[],
+   perms:['world.read.local','network.presentation'],caps:['范围/路径（平台侧数据）'],deps:[{id:'builtin.core',range:'>=3.0.0'}],conflicts:[],
+   contribution:{frameMs:0,memoryKb:0,objects:0,errors:0},changelog:'要求加载器 API >=3.0.0，当前 2.0.0。',releaseDate:'2026-08-01',supported:['1.21.120'],risk:'high'},
+  {id:'opt.damaged_pack',name:'损坏的材质包',version:'1.0.0',state:'corrupt',author:'Unknown',license:'未声明',size:98304,category:'材质',tags:['材质'],source:'local-file',favorite:false,groups:[],
+   perms:['resource.read'],caps:[],deps:[],conflicts:[],
+   contribution:{frameMs:0,memoryKb:0,objects:0,errors:3},changelog:'文件清单哈希不匹配；未列文件被拒绝。',releaseDate:'2026-07-11',supported:[],risk:'critical'},
+  {id:'net.remote_fx',name:'远端表现桥 (BLSP/1)',version:'1.2.0',state:'disabled',author:'Bridge Team',license:'MIT',size:76800,category:'网络',tags:['可选协议','多人'],source:'private',favorite:false,groups:['联机'],
+   perms:['network.presentation','ui.screen'],caps:['表现请求白名单校验'],deps:[{id:'builtin.core',range:'>=2.0.0'}],conflicts:[],
+   contribution:{frameMs:0,memoryKb:0,objects:0,errors:0},changelog:'离线单人模式完全不依赖该模块。',releaseDate:'2026-09-30',supported:['1.21.130'],risk:'high'},
+  {id:'risk.native_ext',name:'原生扩展示例',version:'0.3.0',state:'blocked',author:'Unknown Publisher',license:'未声明',size:1048576,category:'系统',tags:['原生模块'],source:'untrusted',favorite:false,groups:[],
+   perms:['native.module','account.identity'],caps:['需签名 Render Extension SPI'],deps:[],conflicts:[],
+   contribution:{frameMs:0,memoryKb:0,objects:0,errors:0},changelog:'来源不可信 + 关键权限，默认拒绝。',releaseDate:'2026-06-01',supported:[],risk:'critical'}
+];
+
+const SOURCES = [
+  {id:'official',name:'官方源',kind:'official',trust:'trusted',priority:0,cached:'2026-11-06 09:12',keys:['loom-official-ed25519']},
+  {id:'community',name:'社区源',kind:'community',trust:'unknown',priority:10,cached:'2026-11-05 21:40',keys:['community-2026']},
+  {id:'private',name:'企业/私有源',kind:'private',trust:'trusted',priority:5,cached:'2026-11-04 15:03',keys:['corp-key-1']},
+  {id:'untrusted',name:'未验证镜像',kind:'community',trust:'untrusted',priority:99,cached:'2026-10-28 08:00',keys:[]}
+];
+
+const PERMS = {
+  'resource.read':['低','读取本模组自带的模型、贴图和音效资源','受控 ResourceHandle，仅索引本模组命名空间'],
+  'presentation.local':['低','只在你自己的屏幕上显示本地视觉效果','提交到公开 Script API，不改变多人世界权威状态'],
+  'ui.screen':['低','在屏幕上显示提示文字','ScreenDisplay.setActionBar / setTitle / 模态表单'],
+  'input.local':['中','感知你在游戏内的物品使用操作','订阅 world.afterEvents.itemUse 等官方事件'],
+  'entity.observe.local':['中','只读查看附近实体的位置信息','Dimension.getEntities 快照，位置标 sampled'],
+  'storage.world':['中','在当前存档中保存本模组数据','命名空间隔离的本地存档，服务端不可写'],
+  'graphics.settings':['中','改变画面观感（天空、光照氛围）','@minecraft/server-graphics 大气散射参数，需 Vibrant Visuals'],
+  'world.read.local':['中','只读查看世界空间数据','平台侧分块索引，不写世界'],
+  'network.presentation':['高','连接服务器接收/发送视觉表现请求','可选 BLSP/1，断线不影响本地功能'],
+  'account.identity':['关键','访问与账号身份相关的信息','默认拒绝，需单独明确可撤销同意'],
+  'native.module':['关键','加载原生扩展模块（风险最高）','默认拒绝，仅签名清单 + 崩溃隔离 + 可撤销']
+};
+
+const NAV = [
+  ['模组库','library','▦'],['安装与导入','install','⇩'],['源与仓库','sources','☁'],
+  ['更新管理','updates','↻'],['启用与运行顺序','runtime','⏻'],['配置管理','config','⚙'],
+  ['依赖与冲突','conflicts','⚠'],['权限与信任中心','permissions','⛨'],['诊断与修复','diagnostics','✚'],
+  ['配置文件集','profiles','▤'],['能力矩阵与阶段合同','capability','◈']
+];
+
+const state = {
+  view:'library', search:'', filters:[], sort:'name', favoriteOnly:false,
+  selected:null, installStep:0, installState:'idle', installPct:0, installLog:[],
+  autoUpdate:false, skipped:new Set(), enabled:new Set(MODS.filter(m=>m.state!=='disabled'&&m.state!=='blocked').map(m=>m.id)),
+  safeMode:false, configLayer:'global', configSearch:'', config:{enabled:true,particle_count:1,hud_slot:'top_right',accent_color:'#59e6ff',bind:'key.g'},
+  profiles:[{id:'p1',name:'探索预设',mods:['example.loom_blade','fx.particle_plus','ui.hud_suite']},{id:'p2',name:'纯净生存',mods:['builtin.core']}],
+  consent:{'network.presentation':true,'graphics.settings':false}, toastTimer:null
+};
+
+const $ = (s)=>document.querySelector(s);
+const esc = (s)=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtSize = (n)=> n>1048576 ? (n/1048576).toFixed(1)+' MiB' : (n/1024).toFixed(0)+' KiB';
+const stTag = (s)=>`<span class="st ${STATES[s][1]}">${STATES[s][0]}</span>`;
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.style.display='block'; clearTimeout(state.toastTimer); state.toastTimer=setTimeout(()=>t.style.display='none',2600); }
+function permTag(p){ const e=PERMS[p]||['?','?','?']; const cls=e[0]==='关键'||e[0]==='高'?'risk-high':''; return `<span class="tag ${cls}" title="${esc(e[2])}">${esc(p)} · ${e[0]}</span>`; }
+
+/* ------------------------------ 视图 ------------------------------ */
+const V = {};
+
+V.library = ()=>{
+  let items = MODS.filter(m=>{
+    if(state.search && !`${m.name} ${m.id} ${m.tags.join(' ')}`.toLowerCase().includes(state.search.toLowerCase())) return false;
+    if(state.favoriteOnly && !m.favorite) return false;
+    if(state.filters.length && !state.filters.includes(m.state)) return false;
+    return true;
+  });
+  items.sort((a,b)=> state.sort==='size'? b.size-a.size : state.sort==='version'? b.version.localeCompare(a.version) : a.name.localeCompare(b.name,'zh'));
+  const chips = Object.entries(STATES).map(([k,v])=>`<label class="tag" style="cursor:pointer"><input type="checkbox" data-action="filter" value="${k}" ${state.filters.includes(k)?'checked':''}> ${v[0]}</label>`).join('');
+  return `<h1>模组库</h1><p class="sub">卡片、详情、依赖、权限、能力与实际来源。演示数据，不默认上传玩家已安装模组或游玩数据。</p>
+  <div class="toolbar">
+    <input type="text" placeholder="搜索名称 / ID / 标签…" value="${esc(state.search)}" data-action="search">
+    <select data-action="sort"><option value="name">按名称</option><option value="version" ${state.sort==='version'?'selected':''}>按版本</option><option value="size" ${state.sort==='size'?'selected':''}>按大小</option></select>
+    <label class="tag" style="cursor:pointer"><input type="checkbox" data-action="fav-only" ${state.favoriteOnly?'checked':''}> 仅收藏</label>
+    <button class="btn sm" data-action="clear-filters">清除筛选</button>
+  </div>
+  <div class="row" style="margin-bottom:14px">${chips}</div>
+  <div class="mods-grid">${items.map(m=>`
+    <div class="modcard">
+      <div class="thumb">截图占位 · 演示数据</div>
+      <div class="body">
+        <div class="row between"><span class="name">${esc(m.name)}</span>${stTag(m.state)}</div>
+        <div class="id">${esc(m.id)} · v${esc(m.version)}</div>
+        <div class="row"><span class="tag">${esc(m.category)}</span>${m.tags.slice(0,2).map(t=>`<span class="tag">${esc(t)}</span>`).join('')}<span class="tag">${fmtSize(m.size)}</span></div>
+        <div class="dim" style="font-size:11.5px">来源：${esc(m.source)} · 许可证：${esc(m.license)}</div>
+        <div class="row" style="margin-top:auto">
+          <button class="btn sm primary" data-action="detail" data-id="${esc(m.id)}">详情</button>
+          <button class="btn sm" data-action="toggle-fav" data-id="${esc(m.id)}">${m.favorite?'★ 已收藏':'☆ 收藏'}</button>
+        </div>
+      </div>
+    </div>`).join('')}</div>
+  <div class="legend"><span><i style="background:var(--ok)"></i>可启用</span><span><i style="background:var(--accent)"></i>可更新</span><span><i style="background:var(--bad)"></i>需处理（损坏/不兼容/被屏蔽）</span><span><i style="background:var(--muted)"></i>已禁用</span></div>`;
+};
+
+V.install = ()=>{
+  const steps=['选择来源','安装预检','用户确认','原子安装'];
+  const done=state.installState==='done';
+  return `<h1>安装与导入</h1><p class="sub">本地文件 / 模组目录 / 拖拽 / 剪贴板导入；签名、哈希、manifest、依赖、冲突、平台与权限预检；原子安装，失败自动回滚。</p>
+  <div class="steps">${steps.map((s,i)=>`<div class="step ${i===state.installStep?'on':''} ${i<state.installStep||done?'done':''}">${i+1}. ${s}</div>`).join('')}</div>
+  <div class="split">
+    <div class="card">
+      <h3>1 · 选择来源</h3>
+      <div class="grid g2">
+        ${[['local-file','本地文件','.loompack / .mcaddon'],['directory','模组目录','扫描已解压目录'],['drag-drop','拖拽','放到此处'],['clipboard','剪贴板','粘贴 manifest']].map(([k,n,d])=>`<button class="btn ghost" style="text-align:left;border:1px dashed var(--line)" data-action="pick-source" data-kind="${k}"><b>${n}</b><div class="hint">${d}</div></button>`).join('')}
+      </div>
+      <div class="notice acc" style="margin-top:14px">导入包：<b>fx.particle_plus-2.4.0.loompack</b>（演示）<br>来源：社区源 · 签名密钥 community-2026 · 大小 262 KiB</div>
+      <h3>2 · 安装预检</h3>
+      <table><tr><th>检查项</th><th>结果</th><th>说明</th></tr>
+        <tr><td>签名信封</td><td class="ok">通过</td><td class="dim">Ed25519，覆盖 manifest + 文件清单</td></tr>
+        <tr><td>文件清单</td><td class="ok">通过</td><td class="dim">23 个文件全部列出并哈希匹配</td></tr>
+        <tr><td>未列文件</td><td class="ok">0</td><td class="dim">存在未列文件会返回 E_FILE_UNLISTED</td></tr>
+        <tr><td>manifest</td><td class="ok">v2</td><td class="dim">schema / ID / 版本范围 / 权限齐全</td></tr>
+        <tr><td>依赖</td><td class="ok">满足</td><td class="dim">builtin.core &gt;=2.0.0 &lt;3.0.0</td></tr>
+        <tr><td>冲突</td><td class="warn">1 项</td><td class="dim">HUD 插槽 top_right 与 ui.hud_suite 冲突 → 需用户确认</td></tr>
+        <tr><td>权限</td><td class="warn">新增 1 项</td><td class="dim">graphics.settings（中风险）→ 需重新确认</td></tr>
+        <tr><td>平台</td><td class="ok">international</td><td class="dim">1.21.130 / &gt;=1.21.130</td></tr>
+      </table>
+      <div class="notice bad">检测到 <b>重大更新 + 新增权限</b>：必须二次确认，不能用普通"继续"按钮掩盖。</div>
+    </div>
+    <div class="card">
+      <h3>3 · 用户确认</h3>
+      <div class="field"><label>增量安装（保留旧配置）</label><input type="radio" name="mode" checked></div>
+      <div class="field"><label>替换安装（重置配置）</label><input type="radio" name="mode"></div>
+      <div class="field"><label>取消</label><input type="radio" name="mode"></div>
+      <div class="notice">重复文件去重；下载断点续传；校验失败重试上限 3 次；记录实际来源并可撤销。</div>
+      <h3>4 · 原子安装</h3>
+      <div class="flow" style="margin-bottom:10px"><span>INIT</span>→<span>PRECHECK</span>→<span>STAGING</span>→<span>BACKUP</span>→<b><span>COMMIT_PENDING</span></b>→<span>COMMITTED</span>→<span>VERIFY</span>→<span>DONE</span></div>
+      <div class="progress"><i style="width:${state.installPct}%"></i></div>
+      <div class="row between" style="margin:8px 0 14px"><span class="hint">${state.installState==='idle'?'待开始':state.installState==='running'?'执行中（可取消）':state.installState==='cancelled'?'已取消并回滚':state.installState==='done'?'已完成':''} · ${state.installPct}%</span><span class="mono dim">${esc(state.installLog.at(-1)||'—')}</span></div>
+      <div class="row">
+        <button class="btn primary" data-action="install-start" ${state.installState==='running'?'disabled':''}>开始原子安装</button>
+        <button class="btn danger" data-action="install-cancel" ${state.installState!=='running'?'disabled':''}>取消并回滚</button>
+        <button class="btn ghost" data-action="install-reset">重置</button>
+      </div>
+      <div class="notice ok" style="margin-top:14px">任何中断（关机、磁盘满、权限拒绝、文件占用、网络断开、客户端崩溃）都不会留下不可启动状态；无法自动恢复时进入安全模式并解释原因。提交阶段崩溃由事务日志 marker + 备份决定重放或回滚。</div>
+    </div>
+  </div>`;
+};
+
+V.sources = ()=>`<h1>源与仓库</h1><p class="sub">官方 / 社区 / 企业私有源可配置；源身份、签名密钥、优先级、镜像、离线缓存；源不可信时警告，不静默降级。</p>
+  <div class="grid g2">${SOURCES.map(s=>`
+    <div class="card">
+      <div class="row between"><h3>${esc(s.name)}</h3><span class="tag">${s.trust==='trusted'?'<span class="ok">已信任</span>':s.trust==='untrusted'?'<span class="bad">不可信</span>':'待验证'}</span></div>
+      <dl class="kv"><dt>ID</dt><dd class="mono">${esc(s.id)}</dd><dt>类型</dt><dd>${esc(s.kind)}</dd><dt>优先级</dt><dd>${s.priority}（小者优先）</dd><dt>签名密钥</dt><dd class="mono">${esc(s.keys.join(', ')||'无')}</dd><dt>离线缓存</dt><dd>${esc(s.cached)}</dd><dt>索引</dt><dd>增量索引 · 撤销机制</dd></dl>
+      ${s.trust==='untrusted'?'<div class="notice bad">源不可信：必须显示警告，不允许静默降级或一键继续。</div>':''}
+    </div>`).join('')}</div>
+  <h2>仓库索引与撤销</h2>
+  <div class="card"><table><tr><th>字段</th><th>规则</th></tr>
+    <tr><td>索引格式</td><td><code>bedrockloom.repo-index/v2</code>，sequence 单调递增，delta 增量，indexSignature 覆盖整个索引</td></tr>
+    <tr><td>文件分发</td><td>artifact.path + sha256 + size + resumeSupported（断点续传）</td></tr>
+    <tr><td>撤销</td><td>revocations[] 必须给出 reason 与 revokedAt，可指定 replacement</td></tr>
+    <tr><td>多来源</td><td>同一 modId 允许多个候选来源，但已安装记录必须明确唯一 <code>sourceOfRecord</code></td></tr>
+    <tr><td>离线</td><td>显示缓存信息时间；不假装是实时索引</td></tr>
+  </table></div>`;
+
+V.updates = ()=>{
+  const cands=[{v:'2.4.0',breaking:true,perms:['graphics.settings'],compatible:true},{v:'2.3.2',breaking:false,perms:[],compatible:true},{v:'2.2.0',breaking:false,perms:[],compatible:true},{v:'3.0.0',breaking:true,perms:['network.presentation'],compatible:false}];
+  return `<h1>更新管理</h1><p class="sub">检查更新、批量更新、跳过版本、回退版本；兼容当前客户端/加载器的候选版本排序；自动更新默认关闭。</p>
+  <div class="row between card"><div><h3>自动更新</h3><div class="hint">后台更新不得直接替换正在使用文件；重大更新与权限增加须二次确认。</div></div>
+    <button class="btn ${state.autoUpdate?'danger':'primary'}" data-action="toggle-auto">${state.autoUpdate?'已开启（点击关闭）':'默认关闭（点击开启）'}</button></div>
+  <div class="card" style="margin-top:14px"><h3>粒子增强包 · 当前 v2.3.0 → 候选版本</h3>
+  <table><tr><th>版本</th><th>兼容</th><th>类型</th><th>权限变化</th><th>操作</th></tr>
+  ${cands.map(c=>`<tr><td class="mono"><b>${c.v}</b></td><td>${c.compatible?'<span class="ok">兼容 1.21.130 / 加载器 2.x</span>':'<span class="bad">不兼容加载器 API</span>'}</td>
+    <td>${c.breaking?'<span class="warn">重大更新 / 破坏性变更</span>':'常规更新'}</td><td>${c.perms.length?`<span class="warn">新增 ${c.perms.join(', ')}</span>`:'无'}</td>
+    <td>${c.compatible?`<button class="btn sm" data-action="plan-update" data-v="${c.v}" data-breaking="${c.breaking}">更新</button> <button class="btn sm ghost" data-action="skip" data-v="${c.v}">跳过</button>`:'<span class="dim">不可选</span>'}</td></tr>`).join('')}</table>
+  <div class="row" style="margin-top:12px"><span class="hint">已跳过：${[...state.skipped].join('、')||'无'}</span></div></div>
+  <div class="grid g2" style="margin-top:14px">
+    <div class="card"><h3>更新事务</h3><div class="flow"><span>PRECHECK</span>→<span>BACKUP</span>→<span>COMMIT_PENDING</span>→<span>VERIFY</span>→<span>DONE</span></div>
+      <p class="hint" style="margin-top:10px">更新前备份 → 更新后冒烟测试 → 失败回滚。回退版本保留可迁移配置，冲突时展示差异。</p></div>
+    <div class="card"><h3>离线模式</h3><p class="hint">离线时清楚显示缓存信息时间（见"源与仓库"），不把缓存索引当作实时结果；网络不可用不得影响本地模组基本功能。</p>
+      <div class="notice">缓存索引时间：2026-11-05 21:40（社区源）· 已过期提示</div></div>
+  </div>`;
+};
+
+V.runtime = ()=>{
+  const order=['builtin.core','example.loom_blade','ui.hud_suite','fx.particle_plus'];
+  return `<h1>启用、禁用与运行顺序</h1><p class="sub">全局 / 单存档 / 单人·多人独立配置；拓扑排序、加载顺序、冲突解释；安全模式与故障隔离。禁用必须释放资源，不允许只隐藏按钮。</p>
+  <div class="row between card"><div><h3>安全模式</h3><div class="hint">${state.safeMode?'全部模组已停用，仅核心界面可用；上次导致启动失败的模组已隔离。':'未启用。上次启动失败的模组会被自动隔离，不反复崩溃。'}</div></div>
+    <button class="btn ${state.safeMode?'danger':'primary'}" data-action="safe-mode">${state.safeMode?'退出安全模式':'进入安全模式'}</button></div>
+  <div class="split" style="margin-top:14px">
+    <div class="card"><h3>加载顺序（拓扑排序，确定性 tie-break）</h3>
+      <div class="flow" style="margin:10px 0">${order.map((o,i)=>`<span>${i+1}. <b>${esc(o)}</b></span>`).join(' → ')}</div>
+      <p class="hint">依赖自动启用；阻止危险禁用；可选依赖缺失只生成诊断；不依赖隐式加载顺序。</p>
+      <div class="notice">禁用 <code>builtin.core</code> 会破坏 3 个模组的依赖：解释原因并提供"改为仅禁用叶子模组"的建议。</div>
+    </div>
+    <div class="card"><h3>作用域与隔离</h3>
+      ${MODS.filter(m=>!['builtin','blocked'].includes(m.state)).map(m=>`<div class="field"><label>${esc(m.name)} <span class="hint">${esc(m.id)}</span></label>
+        <button class="btn sm ${state.enabled.has(m.id)?'':'danger'}" data-action="toggle-enabled" data-id="${esc(m.id)}">${state.enabled.has(m.id)?'已启用 · 点击禁用':'已禁用 · 点击启用'}</button></div>`).join('')}
+      <p class="hint" style="margin-top:10px">禁用后：取消事件订阅、清空白名单、释放 ResourceHandle、活动句柄计数归零。</p>
+    </div>
+  </div>
+  <div class="card" style="margin-top:14px"><h3>故障计数与熔断</h3><table><tr><th>模组</th><th>故障次数</th><th>状态</th><th>依据</th></tr>
+    <tr><td class="mono">opt.damaged_pack</td><td>3</td><td><span class="bad">已隔离</span></td><td class="dim">文件清单哈希不匹配，隔离后不重试风暴</td></tr>
+    <tr><td class="mono">fx.particle_plus</td><td>1</td><td><span class="warn"> recovering </span></td><td class="dim">粒子预算软降级，未熔断</td></tr></table></div>`;
+};
+
+V.config = ()=>{
+  const fields=[
+    ['enabled','开关','boolean',true],['particle_count','数值 (1–32)','number',1],
+    ['hud_slot','枚举','enum','top_right'],['accent_color','颜色','color','#59e6ff'],['bind','按键','keybinding','key.g']
+  ];
+  const q=state.configSearch.toLowerCase();
+  return `<h1>配置管理</h1><p class="sub">自动生成配置界面：开关、数值、枚举、字符串、列表、按键、颜色、文件引用；分层、搜索、默认值、恢复、导入导出、脱敏与迁移。</p>
+  <div class="toolbar">
+    <input type="text" placeholder="搜索配置项…" value="${esc(state.configSearch)}" data-action="config-search">
+    <select data-action="config-layer"><option value="global" ${state.configLayer==='global'?'selected':''}>全局</option><option value="world" ${state.configLayer==='world'?'selected':''}>存档</option><option value="player" ${state.configLayer==='player'?'selected':''}>玩家</option></select>
+    <button class="btn sm" data-action="config-reset">恢复默认</button>
+    <button class="btn sm" data-action="config-export">导出（脱敏）</button>
+    <button class="btn sm" data-action="config-import">导入</button>
+  </div>
+  <div class="split">
+    <div class="card"><h3>织纹之刃 · ${state.configLayer} 层</h3>
+      ${fields.filter(f=>!q||f[0].includes(q)||f[1].toLowerCase().includes(q)).map(([k,label,type,def])=>{
+        const v=state.config[k], id=`cfg-${k}`;
+        let control='';
+        if(type==='boolean') control=`<input type="checkbox" id="${id}" data-action="config-set" data-key="${k}" ${v?'checked':''}>`;
+        else if(type==='number') control=`<input type="number" id="${id}" min="1" max="32" style="width:90px" value="${v}" data-action="config-set" data-key="${k}">`;
+        else if(type==='enum') control=`<select id="${id}" data-action="config-set" data-key="${k}">${['top_right','top_left','bottom_right'].map(o=>`<option ${v===o?'selected':''}>${o}</option>`).join('')}</select>`;
+        else if(type==='color') control=`<input type="text" id="${id}" style="width:110px" value="${esc(v)}" data-action="config-set" data-key="${k}">`;
+        else control=`<input type="text" id="${id}" style="width:110px" value="${esc(v)}" data-action="config-set" data-key="${k}">`;
+        return `<div class="field"><label>${label} <span class="hint mono">${k}</span></label>${control}</div>`;
+      }).join('')}
+      <p class="hint" style="margin-top:10px">合并顺序：global &lt; world &lt; player；无效值回落默认并列出差异；重启要求项明确标注，不热应用。</p>
+    </div>
+    <div class="card"><h3>升级时的配置迁移</h3>
+      <div class="notice">Schema v1 → v2：<code>particle_count</code> 下限由 1 改为 2；当前值 1 无效 → 回落到默认值 2，并在此展示差异由用户确认，不静默覆盖。</div>
+      <table><tr><th>项</th><th>旧值</th><th>新值</th><th>处置</th></tr>
+        <tr><td class="mono">enabled</td><td>true</td><td>true</td><td class="ok">保留</td></tr>
+        <tr><td class="mono">particle_count</td><td>1</td><td>2</td><td class="warn">冲突 → 展示差异</td></tr>
+        <tr><td class="mono">legacy_field</td><td>x</td><td>—</td><td class="dim">已移除，列出</td></tr></table>
+      <h3 style="margin-top:16px">敏感项</h3><p class="hint">令牌不写入普通配置；界面显示 <code>***redacted***</code>，值由密钥存储持有。</p>
+    </div>
+  </div>`;
+};
+
+V.conflicts = ()=>`<h1>依赖与冲突解决</h1><p class="sub">精确版本、范围、平台、可选依赖、破坏性冲突；资源命名空间、服务实现、按键、HUD 插槽冲突；给出"为什么不能启用"与可执行建议。</p>
+  <div class="grid g2">
+    <div class="card"><h3>HUD 插槽冲突 <span class="tag">top_right</span></h3>
+      <p><b>为什么不能同时启用：</b><code>ui.hud_suite</code> 与 <code>fx.particle_plus</code> 都声明 HUD 插槽 <code>top_right</code>，且都提供 <code>service.particle</code> 实现。平台不允许静默覆盖资源或随机挑选胜者。</p>
+      <p><b>可执行建议：</b></p><ol style="font-size:12.5px;color:var(--muted);padding-left:20px">
+        <li>在配置管理中把其中一项的 <code>hud_slot</code> 改为 <code>top_left</code></li>
+        <li>二选一启用（禁用另一个会释放其资源与订阅）</li>
+        <li>联系作者改为可选服务而非多实现</li></ol>
+      <div class="notice bad">强制覆盖：必须显示风险说明、写入审计记录、保留回退点（BACKUP）。普通"继续"按钮不足以授权。</div>
+      <button class="btn danger sm" data-action="force-override">强制覆盖（需确认风险）</button>
+    </div>
+    <div class="card"><h3>版本与依赖</h3>
+      <table><tr><th>模组</th><th>要求</th><th>结果</th><th>建议</th></tr>
+        <tr><td class="mono">world.map_overlay</td><td>loader &gt;=3.0.0</td><td class="bad">不满足（当前 2.0.0）</td><td class="dim">寻找兼容 2.x 的候选版本或取消启用</td></tr>
+        <tr><td class="mono">opt.damaged_pack</td><td>builtin.core</td><td class="warn">包损坏</td><td class="dim">重新下载或从备份恢复</td></tr>
+        <tr><td class="mono">net.remote_fx</td><td>builtin.core &gt;=2.0.0</td><td class="ok">满足</td><td class="dim">可选依赖缺失只诊断</td></tr>
+        <tr><td class="mono">risk.native_ext</td><td>—</td><td class="bad">来源不可信</td><td class="dim">显示警告，需显式信任</td></tr></table>
+    </div>
+  </div>
+  <h2>冲突类型与错误码</h2>
+  <div class="card"><table><tr><th>类型</th><th>错误码</th><th>处置</th></tr>
+    ${[['精确/范围版本','E_DEP_VERSION','列出兼容候选版本'],['硬冲突 / breaks','E_DEP_HARD_CONFLICT','给出为什么不能启用'],['服务实现冲突','E_DEP_SERVICE_CONFLICT','不允许静默挑选胜者'],['资源命名空间占用','E_NAMESPACE_COLLISION','改用不同命名空间'],['按键冲突','E_DEP_KEY_CONFLICT','提供可访问替代绑定'],['HUD 插槽冲突','E_DEP_HUD_CONFLICT','换插槽或关闭其一'],['依赖环','E_DEP_CYCLE','给出环路径'],['重复模组','E_DEP_DUPLICATE_ID','去重并标明实际来源']].map(r=>`<tr><td>${r[0]}</td><td class="mono">${r[1]}</td><td class="dim">${r[2]}</td></tr>`).join('')}</table></div>`;
+
+V.permissions = ()=>`<h1>权限与信任中心</h1><p class="sub">通俗说明 + 技术实现双层描述；安装前声明、运行时新增权限重新确认、可撤销；不收集遥测，除非单独、明确、可撤销同意。</p>
+  <div class="grid g2">${Object.entries(PERMS).map(([p,[level,plain,tech]])=>`
+    <div class="card"><div class="row between"><h3 class="mono">${esc(p)}</h3><span class="tag ${level==='关键'||level==='高'?'risk-high':''}">${level}风险</span></div>
+      <p style="font-size:12.5px;margin:8px 0"><b>通俗：</b>${esc(plain)}</p>
+      <p class="hint" style="margin:0"><b>技术：</b>${esc(tech)}</p></div>`).join('')}</div>
+  <h2>运行时新增权限 · 重新确认</h2>
+  <div class="card"><p>模组 <code>fx.particle_plus</code> 升级到 2.4.0 后新增 <code>graphics.settings</code>（改变画面观感）。必须重新确认，不得自动沿用旧同意。</p>
+    <div class="row"><button class="btn primary" data-action="reconfirm">明确同意并记录审计</button><button class="btn danger" data-action="revoke">撤销 network.presentation</button></div>
+    <div class="notice">高风险模组（<code>account.identity</code> / <code>native.module</code> / 遥测）不能用"继续"按钮掩盖；需强化确认、单独说明、可撤销。</div>
+  </div>
+  <h2>信任摘要</h2>
+  <div class="card"><table><tr><th>模组</th><th>签名</th><th>作者</th><th>来源</th><th>许可证</th><th>已知问题</th><th>结论</th></tr>
+    <tr><td class="mono">example.loom_blade</td><td class="ok">已签</td><td>Bedrock Loom</td><td>official</td><td>MIT</td><td class="dim">旧包版本差</td><td class="ok">常规</td></tr>
+    <tr><td class="mono">risk.native_ext</td><td class="bad">未签名</td><td>Unknown</td><td class="bad">untrusted</td><td class="bad">未声明</td><td class="dim">关键权限 ×2</td><td class="bad">拒绝</td></tr></table>
+    <p class="hint" style="margin-top:10px">供应链状态：签名密钥、指纹、撤销列表、审计记录可查；遥测：<b>默认不收集</b>。</p></div>`;
+
+V.diagnostics = ()=>{
+  const rows=MODS.filter(m=>m.contribution.objects||m.contribution.errors);
+  return `<h1>诊断与修复</h1><p class="sub">启动时间、加载阶段、依赖结果、资源错误、崩溃与降级；一键复制脱敏诊断包；按模组显示帧时间/内存/对象数/错误贡献；区分问题来源。</p>
+  <div class="grid g4">
+    <div class="card"><div class="hint">已安装</div><div style="font-size:24px;font-weight:700">${MODS.length}</div></div>
+    <div class="card"><div class="hint">错误</div><div style="font-size:24px;font-weight:700;color:var(--bad)">${MODS.reduce((s,m)=>s+m.contribution.errors,0)}</div></div>
+    <div class="card"><div class="hint">帧时间合计</div><div style="font-size:24px;font-weight:700">${MODS.reduce((s,m)=>s+m.contribution.frameMs,0).toFixed(1)}<span class="hint"> ms</span></div></div>
+    <div class="card"><div class="hint">活动对象</div><div style="font-size:24px;font-weight:700">${MODS.reduce((s,m)=>s+m.contribution.objects,0)}</div></div>
+  </div>
+  <div class="split" style="margin-top:14px">
+    <div class="card"><h3>每个模组的贡献度</h3><table><tr><th>模组</th><th>帧时间</th><th>内存</th><th>对象</th><th>错误</th></tr>
+      ${rows.map(m=>`<tr><td class="mono">${esc(m.id)}</td><td>${m.contribution.frameMs} ms</td><td>${m.contribution.memoryKb} KB</td><td>${m.contribution.objects}</td><td class="${m.contribution.errors?'bad':'ok'}">${m.contribution.errors}</td></tr>`).join('')}</table></div>
+    <div class="card"><h3>问题分类</h3>
+      <div class="notice bad"><b>模组 bug</b>：opt.damaged_pack 文件清单哈希不匹配（E_FILE_HASH_MISMATCH）</div>
+      <div class="notice"><b>适配器限制</b>：graphics.settings 需 Vibrant Visuals，设备能力未验证 → degraded</div>
+      <div class="notice"><b>官方客户端限制</b>：自定义 Shader / 后处理 / 渲染层为 Unavailable（E_CAP_UNAVAILABLE），给出正式授权路径</div>
+      <div class="notice acc"><b>网络问题</b>：BLSP/1 断线不影响本地模组基本功能</div>
+      <h3 style="margin-top:16px">可执行修复</h3><div class="row">
+        <button class="btn sm" data-action="repair" data-what="验证资源">验证资源</button>
+        <button class="btn sm" data-action="repair" data-what="清理缓存">清理缓存</button>
+        <button class="btn sm" data-action="repair" data-what="恢复默认">恢复默认</button>
+        <button class="btn sm" data-action="repair" data-what="回滚最近变更">回滚最近变更</button>
+        <button class="btn sm primary" data-action="copy-diag">一键复制脱敏诊断包</button></div>
+      <p class="hint" style="margin-top:10px">诊断包默认排除聊天、账号、IP、跨平台 ID、完整坐标轨迹与无关文件；不上传玩家数据。</p>
+    </div>
+  </div>`;
+};
+
+V.profiles = ()=>`<h1>配置文件集</h1><p class="sub">保存一组启用模组、版本与配置；单人不同玩法预设；导出/导入与跨设备差异说明；不默认导出许可证不允许再分发的模组文件。</p>
+  <div class="grid g3">${state.profiles.map(p=>`
+    <div class="card"><h3>${esc(p.name)}</h3><div class="hint">${p.mods.length} 个模组 · 创建于 2026-11-06</div>
+      <div style="margin:10px 0">${p.mods.map(m=>`<span class="tag" style="margin:2px">${esc(m)}</span>`).join('')}</div>
+      <div class="row"><button class="btn sm primary" data-action="profile-apply" data-id="${p.id}">应用</button>
+        <button class="btn sm" data-action="profile-export" data-id="${p.id}">导出</button></div></div>`).join('')}
+    <div class="card" style="display:grid;place-items:center;border-style:dashed"><button class="btn primary" data-action="profile-new">＋ 新建文件集</button></div></div>
+  <h2>导入与跨设备差异</h2>
+  <div class="card"><div class="notice">导入 <code>探索预设</code> 时检测到：<b>缺失模组</b> <code>fx.particle_plus</code>（本机为 update-available），<b>版本差异</b> <code>ui.hud_suite</code> 本地 1.4.1 / 文件集 1.5.0。逐条说明，不静默补齐。</div>
+    <div class="row"><button class="btn sm" data-action="profile-import">导入文件集</button><button class="btn sm" data-action="profile-diff">查看跨设备差异</button></div>
+    <p class="hint" style="margin-top:10px">导出默认只包含 ID / 版本 / 配置；包含模组文件需逐项核对许可证（返回 degraded 并给出原因）。</p></div>`;
+
+V.capability = ()=>`<h1>能力矩阵与渲染阶段合同</h1><p class="sub">基于国际版 1.21.130 的证据复核。E0–E5 必须标注证据域；E1/E2 只能 Experimental；E3 最多 Candidate；E4 及以上才可 Stable。</p>
+  <div class="notice acc"><b>核心结论：</b>真正介入渲染的只有 <b>ResourceBuild</b> 与 <b>ResourceLoad</b>（间接影响），以及 <b>SimulationSync</b>（提交粒子/音效）、<b>UiDraw</b>（受限屏幕 UI）、<b>PostProcess 之前的环境参数设置</b>（大气散射参数）。国际版没有任何"直接控制"阶段。自定义 Shader、几何提交、渲染层、透明排序、帧缓冲后处理、每帧骨骼写入、原生相机 Hook 全部 <b>不可访问 / Unavailable</b>。</div>
+  <div class="card"><h3>十阶段逐阶段标注</h3><table><tr><th>阶段</th><th>国际版 1.21.130</th><th>实际介入点</th><th>最强证据</th></tr>
+  ${[['ResourceBuild','间接影响','资源包 geometry / attachable / animation / particle / Vibrant Visuals JSON','E1–E2'],
+     ['ResourceLoad','间接影响','游戏读取 manifest 后加载；平台无上传回调','E1'],
+     ['SimulationSync','间接影响','Player.spawnParticle / playSound / itemUse 事件','E2'],
+     ['SceneUpdate','只能观察','预声明 animation_controllers 由引擎求值','E1'],
+     ['CullAndSort','不可访问','无公开剔除/排序注册点','E0'],
+     ['GeometrySubmit','不可访问','无顶点/索引运行时提交接口','E0'],
+     ['RenderLayer','不可访问','render_controllers 只是资源层绑定描述','E0'],
+     ['PostProcess','间接影响（仅参数） / 自定义 pass 不可访问','@minecraft/server-graphics BiomeAtmospherics.set*/reset*','E2 / E0'],
+     ['UiDraw','间接影响（受限）','ScreenDisplay.setActionBar / setTitle / HUD 可见性 / 表单','E2'],
+     ['FramePresent','不可访问','无逐帧渲染回调或帧结束信号','E0']].map(r=>`<tr><td class="mono"><b>${r[0]}</b></td><td class="${r[1].includes('不可访问')?'bad':r[1].includes('只能观察')?'warn':'acc'}">${r[1]}</td><td class="dim">${r[2]}</td><td class="mono">${r[3]}</td></tr>`).join('')}</table></div>
+  <div class="split" style="margin-top:14px">
+    <div class="card"><h3>证据域与级别</h3><table><tr><th>域</th><th>上限</th><th>状态</th></tr>
+      <tr><td>platform-side（管理器/包/依赖/事务/权限/诊断/迁移）</td><td class="ok">E4</td><td>Stable（20 个）</td></tr>
+      <tr><td>in-game（粒子/音效/UI/资源/Vibrant Visuals）</td><td class="warn">E2</td><td>Experimental；Candidate 0 个</td></tr>
+      <tr><td>custom-client（签名 SPI）</td><td class="bad">E0</td><td>CustomClientOnly</td></tr></table>
+      <p class="hint" style="margin-top:10px">未验证：各设备可用性、Realms/BDS 存档差异、@minecraft/server-graphics 是否需实验开关、所有画面结果。第三方 v26.30 平台差异表不作为 1.21.130 证据。</p></div>
+    <div class="card"><h3>API 状态总表</h3><table><tr><th>状态</th><th>数量</th><th>说明</th></tr>
+      <tr><td class="ok">Stable</td><td>20</td><td class="dim">全部 platform-side，不介入渲染</td></tr>
+      <tr><td class="warn">Candidate</td><td>0</td><td class="dim">E3 需真实客户端，沙箱无法产生</td></tr>
+      <tr><td>Experimental</td><td>20</td><td class="dim">in-game E1/E2，画面未验证</td></tr>
+      <tr><td>BuildTimeOnly</td><td>6</td><td class="dim">资源格式，运行时返回 unsupported</td></tr>
+      <tr><td>PlatformRestricted</td><td>2</td><td class="dim">Vibrant Visuals 相关</td></tr>
+      <tr><td>CustomClientOnly</td><td>2</td><td class="dim">网易适配器 / 签名 SPI</td></tr>
+      <tr><td class="bad">Unavailable</td><td>14</td><td class="dim">合格结论，附正式授权路径</td></tr></table></div>
+  </div>`;
+
+/* ------------------------------ 详情抽屉 ------------------------------ */
+function openDrawer(id){
+  const m=MODS.find(x=>x.id===id); if(!m) return;
+  $('#drawer').innerHTML=`<div class="row between"><h1 style="font-size:19px">${esc(m.name)}</h1><button class="btn sm ghost" data-action="close-drawer">✕</button></div>
+    <div class="id mono" style="margin-bottom:12px">${esc(m.id)} · v${esc(m.version)} ${stTag(m.state)}</div>
+    <div class="thumb" style="height:120px;border-radius:8px;margin-bottom:14px">截图占位 · 演示数据</div>
+    <dl class="kv"><dt>作者</dt><dd>${esc(m.author)}</dd><dt>许可证</dt><dd>${esc(m.license)}</dd>
+      <dt>分类 / 标签</dt><dd>${esc(m.category)} · ${m.tags.map(esc).join('、')}</dd><dt>大小</dt><dd>${fmtSize(m.size)}</dd>
+      <dt>实际来源</dt><dd class="mono">${esc(m.source)}</dd><dt>支持版本</dt><dd>${esc(m.supported.join(', ')||'未验证')}</dd>
+      <dt>发布日期</dt><dd>${esc(m.releaseDate)}</dd><dt>能力</dt><dd>${m.caps.map(c=>`<span class="tag">${esc(c)}</span>`).join(' ')||'—'}</dd></dl>
+    <h2>依赖</h2><div>${m.deps.length?m.deps.map(d=>`<span class="tag">${esc(d.id)} ${esc(d.range)}</span>`).join(' '):'<span class="dim">无</span>'}</div>
+    <h2>权限（通俗 + 技术双层）</h2>${m.perms.map(p=>{const e=PERMS[p]||['?','?','?'];return `<div class="card" style="margin-bottom:8px;padding:10px"><b class="mono">${esc(p)}</b> <span class="tag ${e[0]==='关键'||e[0]==='高'?'risk-high':''}">${e[0]}风险</span><div style="font-size:12px;margin-top:5px">${esc(e[1])}</div><div class="hint">${esc(e[2])}</div></div>`}).join('')||'<span class="dim">无</span>'}
+    ${m.conflicts.length?`<h2>冲突</h2>${m.conflicts.map(c=>`<div class="notice bad">${esc(c.reason)}</div>`).join('')}`:''}
+    ${m.stageContracts?`<h2>阶段合同（真实介入点）</h2><table><tr><th>阶段</th><th>标注</th><th>实际介入点</th></tr>${m.stageContracts.map(s=>`<tr><td class="mono">${s[0]}</td><td class="acc">${s[1]}</td><td class="dim">${esc(s[2])}</td></tr>`).join('')}</table>`:''}
+    <h2>变更日志</h2><p class="hint">${esc(m.changelog)}</p>
+    <h2>说明链接</h2><p class="hint">变更日志与说明链接在详情中展示；不默认上传玩家已安装模组或游玩数据。</p>
+    <div class="row" style="margin:16px 0"><button class="btn primary sm" data-action="detail-install" data-id="${esc(m.id)}">安装 / 更新</button><button class="btn sm" data-action="detail-config" data-id="${esc(m.id)}">配置</button></div>`;
+  $('#drawer').classList.add('open'); $('#mask').classList.add('open');
+}
+function closeDrawer(){ $('#drawer').classList.remove('open'); $('#mask').classList.remove('open'); }
+
+/* ------------------------------ 安装状态机 ------------------------------ */
+let installTimer=null;
+function installStart(){
+  state.installState='running'; state.installPct=0; state.installLog=['INIT → PRECHECK'];
+  const seq=[['PRECHECK',10,'签名 + 文件清单校验通过'],['STAGING',30,'暂存 23 个文件'],['BACKUP',50,'已备份旧版本'],['COMMIT_PENDING',70,'提交点已记录'],['COMMITTED',85,'目录 rename 完成'],['VERIFY',95,'回读校验通过'],['DONE',100,'安装完成']];
+  let i=0; render();
+  installTimer=setInterval(()=>{
+    if(state.installState!=='running'){clearInterval(installTimer);return;}
+    const s=seq[i++]; state.installPct=s[1]; state.installLog.push(`${s[0]}：${s[2]}`);
+    if(s[0]==='DONE'){state.installState='done';clearInterval(installTimer);toast('原子安装完成，事务已 COMMIT');}
+    render();
+  },420);
+}
+function installCancel(){ clearInterval(installTimer); state.installState='cancelled'; state.installPct=0; state.installLog.push('E_TX_CANCELLED：用户取消，自动回滚到 BEGIN 前状态'); render(); toast('已取消并回滚'); }
+
+/* ------------------------------ 渲染与事件 ------------------------------ */
+function render(){
+  $('#nav').innerHTML=NAV.map(([name,key,ico],i)=>`${i===0?'<div class="group">模组管理</div>':i===10?'<div class="group">平台证据</div>':''}<button class="${state.view===key?'active':''}" data-action="nav" data-view="${key}"><span class="ico">${ico}</span>${name}</button>`).join('');
+  $('#view').innerHTML=(V[state.view]||V.library)();
+  document.querySelectorAll('[data-action="sort"]').forEach(el=>{ /* value set by selected attr */ });
+}
+
+document.addEventListener('click',(e)=>{
+  const el=e.target.closest('[data-action]'); if(!el) return;
+  const a=el.dataset.action, id=el.dataset.id;
+  switch(a){
+    case 'nav': state.view=el.dataset.view; render(); break;
+    case 'detail': openDrawer(id); break;
+    case 'close-drawer': closeDrawer(); break;
+    case 'toggle-fav': {const m=MODS.find(x=>x.id===id); m.favorite=!m.favorite; render(); toast(m.favorite?'已收藏':'已取消收藏'); break;}
+    case 'filter': {const v=el.value; state.filters=el.checked?[...state.filters,v]:state.filters.filter(x=>x!==v); render(); break;}
+    case 'clear-filters': state.filters=[];state.search='';state.favoriteOnly=false;render();break;
+    case 'fav-only': state.favoriteOnly=el.checked;render();break;
+    case 'pick-source': toast(`已选择来源：${el.dataset.kind}（演示）`);break;
+    case 'install-start': installStart();break;
+    case 'install-cancel': installCancel();break;
+    case 'install-reset': clearInterval(installTimer);state.installState='idle';state.installPct=0;state.installLog=[];state.installStep=0;render();break;
+    case 'toggle-auto': state.autoUpdate=!state.autoUpdate;render();toast(state.autoUpdate?'已开启自动更新（真实产品仍默认关闭）':'自动更新默认关闭');break;
+    case 'skip': state.skipped.add(el.dataset.v);render();toast(`已跳过 ${el.dataset.v}`);break;
+    case 'plan-update': toast(`${el.dataset.v}：${el.dataset.breaking==='true'?'重大更新 + 新增权限，需二次确认并更新前备份':'常规更新，更新前备份 + 冒烟测试'}`);break;
+    case 'safe-mode': state.safeMode=!state.safeMode;render();toast(state.safeMode?'已进入安全模式，全部模组停用':'已退出安全模式');break;
+    case 'toggle-enabled': {const s=new Set(state.enabled); s.has(id)?s.delete(id):s.add(id); state.enabled=s; render(); toast(id=== 'builtin.core'?'阻止危险禁用：3 个模组依赖它':'已切换启用状态并释放/登记资源');break;}
+    case 'config-reset': state.config={enabled:true,particle_count:1,hud_slot:'top_right',accent_color:'#59e6ff',bind:'key.g'};render();toast('已恢复默认值');break;
+    case 'config-export': {const text=JSON.stringify({schema:'bedrockloom.config/v1',layer:state.configLayer,values:state.config,redacted:['token']},null,2);copyText(text);break;}
+    case 'config-import': toast('导入配置：展示 Schema 版本差异，冲突项不静默覆盖');break;
+    case 'force-override': toast('强制覆盖已记录：风险说明 + 审计记录 + 回退点 BACKUP');break;
+    case 'reconfirm': state.consent['graphics.settings']=true;toast('已明确同意 graphics.settings 并写入审计记录');break;
+    case 'revoke': state.consent['network.presentation']=false;toast('已撤销 network.presentation，相关能力停止');break;
+    case 'repair': toast(`执行修复：${el.dataset.what}（可撤销、长任务可取消）`);break;
+    case 'copy-diag': copyText('Bedrock Loom 脱敏诊断包\n客户端 1.21.130 / international\n设备: 未验证 / 存档: 未验证 / 测试日期: 未运行（沙箱无客户端）\n错误: E_FILE_HASH_MISMATCH [mod-bug]; E_CAP_UNAVAILABLE [client-limit]\n已排除: 聊天、账号、IP、跨平台 ID、完整坐标轨迹\n遥测: 默认不收集');break;
+    case 'profile-apply': toast('应用文件集：逐项启用并展示缺失模组说明');break;
+    case 'profile-export': toast('导出：仅 ID/版本/配置，不默认包含模组文件');break;
+    case 'profile-new': {state.profiles.push({id:'p'+(state.profiles.length+1),name:'新建预设 '+(state.profiles.length+1),mods:['builtin.core']});render();toast('已创建文件集');break;}
+    case 'profile-import': toast('导入：缺失模组与版本差异逐条说明，不静默补齐');break;
+    case 'profile-diff': toast('跨设备差异：缺失 1 项、版本差异 1 项');break;
+    case 'detail-install': closeDrawer();state.view='install';render();break;
+    case 'detail-config': closeDrawer();state.view='config';render();break;
+  }
+});
+
+document.addEventListener('input',(e)=>{
+  const el=e.target.closest('[data-action]'); if(!el) return;
+  const a=el.dataset.action;
+  if(a==='search'){state.search=el.value;render();const inp=document.querySelector('[data-action="search"]');if(inp){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);}}
+  else if(a==='config-search'){state.configSearch=el.value;render();const inp=document.querySelector('[data-action="config-search"]');if(inp){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);}}
+  else if(a==='config-set'){
+    const k=el.dataset.key;
+    state.config[k]= el.type==='checkbox'?el.checked : el.type==='number'?Number(el.value):el.value;
+    toast(`已更新 ${k}（${state.configLayer} 层）`);
+  }
+});
+document.addEventListener('change',(e)=>{
+  const el=e.target.closest('[data-action]'); if(!el) return;
+  if(el.dataset.action==='sort'){state.sort=el.value;render();}
+  else if(el.dataset.action==='config-layer'){state.configLayer=el.value;render();}
+});
+function copyText(text){
+  const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');toast('已复制到剪贴板（脱敏）');}catch{toast('复制失败，请手动选择文本');}
+  document.body.removeChild(ta);
+}
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "format_version": "1.14.0",
+  "sound_definitions": {
+    "bedrockloom.loom_blade.swing": {
+      "category": "player",
+      "sounds": [{"name": "sounds/random/orb", "volume": 0.8, "pitch": [0.95, 1.1]}]
+    }
+  }
+}
