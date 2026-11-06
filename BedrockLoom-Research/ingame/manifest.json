@@ -1,0 +1,29 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "BedrockLoom-Research BP Skeleton",
+    "description": "研究用行为包脚本骨架，仅作者本机；不含任何游戏资产、不含进程注入实现，不可直接导入游戏。",
+    "uuid": "00000000-0000-0000-0000-000000000001",
+    "version": [0, 1, 0],
+    "min_engine_version": [1, 21, 130]
+  },
+  "modules": [
+    {
+      "type": "script",
+      "uuid": "00000000-0000-0000-0000-000000000002",
+      "version": [0, 1, 0],
+      "entry": "scripts/loom-global.js",
+      "description": "loom 全局对象与合规扩展 API 骨架"
+    }
+  ],
+  "metadata": {
+    "authors": ["BedrockLoom-Research"],
+    "license": "MIT",
+    "url": "https://github.com/ChaosSurvivalProject/BedrockLoom",
+    "research_notice": [
+      "本 manifest 是骨架：uuid 为占位值，需作者本机替换。",
+      "@minecraft/server、@minecraft/server-ui、@minecraft/server-graphics 的模块依赖版本未写入：确切版本在本仓库标为未验证，不猜测、不硬编码。",
+      "作者本机补全依赖并确认合法后方可加载；本仓库不提供可直接导入的改后包。"
+    ]
+  }
+}

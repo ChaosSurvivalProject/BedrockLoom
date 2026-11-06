@@ -1,0 +1,15 @@
+{
+  "name": "bedrockloom-research",
+  "version": "0.1.0-research.0",
+  "private": true,
+  "type": "module",
+  "description": "BedrockLoom-Research：本机私有渲染可观测性研究骨架（不含游戏资产、不含进程注入实现）",
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "evidence": "node run-evidence.mjs",
+    "probe": "node parser/layout.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
