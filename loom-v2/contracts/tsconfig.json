@@ -10,5 +10,5 @@
     "types": [],
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["types.ts", "services.ts"]
+  "include": ["types.ts", "services.ts", "../render-intent/*.ts"]
 }

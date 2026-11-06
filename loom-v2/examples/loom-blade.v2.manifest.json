@@ -512,12 +512,12 @@
     "algorithm": "Ed25519",
     "keyId": "loom-demo-ed25519",
     "signedBy": "Bedrock Loom Demo Publisher",
-    "signedAt": "2026-11-06T04:01:11.777Z"
+    "signedAt": "2026-11-06T06:35:37.793Z"
   },
   "content": {
     "fileList": "META/file-list.json",
     "hashAlgorithm": "sha256",
-    "manifestHash": "094fa82d9c2e3bd61fb1e415a471274d43504f57fb84adeb0643b11b82d407b6",
+    "manifestHash": "52fe135bcabec941aa5d69877c0103982a77ceea3c0fee205d3f28145e257172",
     "totalBytes": 37391,
     "fingerprint": "fe7f19ce3082c2c259dac59dfbfa30b8"
   },
@@ -526,7 +526,7 @@
     "sourceKind": "local-file",
     "installedFrom": "../mod/mod.json（v1 迁移，只读）",
     "trustState": "unknown",
-    "cachedAt": "2026-11-06T04:01:11.777Z"
+    "cachedAt": "2026-11-06T06:35:37.793Z"
   },
   "compatibility": {
     "minClientBuild": "1.21.130",

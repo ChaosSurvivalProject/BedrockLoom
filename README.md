@@ -1,6 +1,11 @@
-# Bedrock Loom v2
+# Bedrock Loom v2.1.0
 
-**面向 Minecraft 基岩版国际版 1.21.130 的零侵入式模组平台扩展。**
+**面向 Minecraft 基岩版国际版 1.21.130 的零侵入式模组平台扩展 + 合规渲染意图层。**
+
+> **v2.1.0 定调**：基岩版 1.21.130 官方没有「渲染管线直连接口」。本版本新增
+> **Render-Intent Bus（渲染意图总线）**——不假装有 `render.drawTriangle()`，只做
+> 「渲染意图抽象 + 外部合成」：游戏内采状态、平台侧出像素。
+> **本扩展不深入渲染管线，只深入渲染意图。** 详见 [`loom-v2/render-intent/README.md`](loom-v2/render-intent/README.md)。
 
 本仓库是对既有项目 **Bedrock Loom v1.1** 的审查与扩展，不是从零重写：既有 40 个源文件保持零修改，所有新增内容放在 `loom-v2/`。项目不修改、不破解、不重打包、不注入国际版游戏二进制；不绕过签名、版权保护、平台沙箱或审核；不 Hook 未公开函数、不读私有内存、不依赖固定偏移。
 
@@ -10,12 +15,17 @@
 
 ## 下载（已构建好的生成物）
 
+**最新版 v2.1.0**：
+
 | 文件 | 内容 | 直链 |
 | --- | --- | --- |
-| `BedrockLoom-v2.0.0-complete.zip` | 完整交付包：既有 `mod/` 基线 + 全部 `loom-v2/` 源码、18 份文档、4 份 JSON Schema、示例产物、证据报告 | [下载](https://github.com/ChaosSurvivalProject/BedrockLoom/releases/download/v2.0.0/BedrockLoom-v2.0.0-complete.zip) |
-| `BedrockLoom-ModManager-offline.html` | 单文件离线图形模组管理器，双击即可在浏览器打开，无 CDN、无 `fetch`、无网络请求 | [下载](https://github.com/ChaosSurvivalProject/BedrockLoom/releases/download/v2.0.0/BedrockLoom-ModManager-offline.html) |
-| `BedrockLoom-v2.0.0-EVIDENCE.md` | 自动化测试与 TypeScript 契约检查证据报告 | [下载](https://github.com/ChaosSurvivalProject/BedrockLoom/releases/download/v2.0.0/BedrockLoom-v2.0.0-EVIDENCE.md) |
+| `BedrockLoom-v2.1.0-complete.zip` | 完整交付包：既有 `mod/` 基线 + v2.0 全部内容 + **v2.1 渲染意图层**（契约/核心/总线/演示页/文档） | [下载](https://github.com/ChaosSurvivalProject/BedrockLoom/releases/download/v2.1.0/BedrockLoom-v2.1.0-complete.zip) |
+| `BedrockLoom-RenderIntent-overlay.html` | **单文件离线外部合成器演示**：双击即可打开，Canvas 小地图 + 监控屏 + 能力边界表，WS→SSE→内置演示三级降级，无 CDN、无 `fetch` | [下载](https://github.com/ChaosSurvivalProject/BedrockLoom/releases/download/v2.1.0/BedrockLoom-RenderIntent-overlay.html) |
+| `BedrockLoom-v2.1.0-EVIDENCE.md` | 11 文件 / 116 用例 / 116 通过 + `tsc --noEmit` 通过的证据报告 | [下载](https://github.com/ChaosSurvivalProject/BedrockLoom/releases/download/v2.1.0/BedrockLoom-v2.1.0-EVIDENCE.md) |
 
+历史版本 v2.0.0：[完整包](https://github.com/ChaosSurvivalProject/BedrockLoom/releases/download/v2.0.0/BedrockLoom-v2.0.0-complete.zip) ·
+[离线图形模组管理器](https://github.com/ChaosSurvivalProject/BedrockLoom/releases/download/v2.0.0/BedrockLoom-ModManager-offline.html) ·
+[证据报告](https://github.com/ChaosSurvivalProject/BedrockLoom/releases/download/v2.0.0/BedrockLoom-v2.0.0-EVIDENCE.md)。
 全部版本见 [Releases](https://github.com/ChaosSurvivalProject/BedrockLoom/releases)。
 
 ---
@@ -115,8 +125,15 @@ BedrockLoom/
     ├── contracts/          TypeScript 契约（types.ts / services.ts / tsconfig.json）
     ├── schemas/            4 份 JSON Schema + 校验错误码表
     ├── manager/index.html  离线图形管理器原型（11 个板块，单文件自包含）
-    ├── docs/00 ~ 17        18 项交付物中的设计文档
-    ├── test/               10 个测试文件 / 80 个用例 + 证据生成器
+    ├── render-intent/      【v2.1.0 新增】渲染意图总线 + 外部合成器
+    │   ├── *.ts            6 个 TypeScript 契约（含 32 行能力审计表）
+    │   ├── core/           纯逻辑：意图校验 / 能力表 / 合成器投影
+    │   ├── runtime/        零依赖本机总线：WS + SSE + 文件管道
+    │   ├── collector/      行为包采集脚本（beta，未经真机验证）
+    │   ├── demo/           serve.mjs + 单文件 overlay.html + 示例数据
+    │   └── docs/           设计冻结 + 能力审计表
+    ├── docs/00 ~ 18        18 项交付物 + v2.1 补充说明
+    ├── test/               11 个测试文件 / 116 个用例 + 证据生成器
     ├── examples/           由脚本真实生成并复验的示例产物
     └── EVIDENCE.md         自动化证据报告
 ```
@@ -131,13 +148,16 @@ BedrockLoom/
 git clone https://github.com/ChaosSurvivalProject/BedrockLoom.git
 cd BedrockLoom/loom-v2
 
-node --test test/                       # 10 文件 / 80 用例 / 80 通过 / 0 失败
+node --test test/                       # 11 文件 / 116 用例 / 116 通过 / 0 失败
 node services/migrate-v1-to-v2.mjs      # 只读 ../mod/mod.json，单向生成 v2 manifest
 node services/build-example-pack.mjs    # 生成并签名完整示例包
 node test/run-evidence.mjs              # 重跑测试 + tsc --noEmit + 刷新 EVIDENCE.md
+node render-intent/demo/serve.mjs       # 启动本机意图总线（仅 127.0.0.1）
 ```
 
 离线图形管理器：直接用浏览器打开 `loom-v2/manager/index.html`，或在 Releases 下载单文件版本；它不发起任何网络请求。
+渲染意图层演示：直接用浏览器打开 `loom-v2/render-intent/demo/overlay.html`（**无需启动任何服务**即可播放内置合成演示），
+或先运行 `serve.mjs` 让页面自动连本机 WS/SSE 实时源。
 
 **迁移是单向的**：`migrate-v1-to-v2.mjs` 绝不写回 `../mod`。测试中用 SHA-256 断言两个既有基线文件（`mod/mod.json`、`mod/docs/RENDER_AUDIT.md`）保持不变。
 
@@ -207,12 +227,72 @@ INIT → PRECHECK → STAGING → BACKUP → COMMIT_PENDING
 - **演示签名私钥不入库**：`loom-v2/examples/demo-private-key.pem` 已加入 `.gitignore`，Release 完整包中同样不含它。运行 `node services/build-example-pack.mjs` 会自动生成新密钥并重新签名示例；验证示例只需 `examples/trust-store.example.json` 中的公钥。该文件**仅用于演示复验，绝不可用于真实发布**。真实发布必须使用离线保管的密钥与撤销列表。
 - 仓库中不含任何访问令牌、账号凭据或私有游戏文件。
 
-## 14. 许可证与免责
+## 14. v2.1.0 渲染意图层（Render-Intent Bus）
+
+> **本扩展不深入渲染管线，只深入渲染意图。**
+
+### 为什么这样设计
+
+1.21.130 国际版官方**没有**渲染管线直连接口。想扩展表现能力，不能假装有 `render.drawTriangle()`。
+v2.1.0 只做三件事：**游戏内采状态 → 平台侧本地总线 → 外部合成器出像素**。
+
+```
+[游戏内 in-game / beta]                [平台侧 platform-side / stable]
+Script API 只读采集  ──数据写出──▶  桥接器 → bus(file/SSE/WS, 127.0.0.1)
+（camera/entities/chunk）  （非实时）  → 外部合成器 Canvas/WebGL/透明窗口
+   ❌ 无 WS / 无文件写入              → 小地图 / HUD / 监控屏（本页像素）
+   ❌ 无 FOV / 包围盒 / 视锥          → 可选 loom.pack.bindTexture（仅构建期）
+[custom-client] 默认关闭，不实现；injectPresent / 帧缓冲读取 = Unavailable
+```
+
+### 三条硬事实（不回避）
+
+| # | 事实 | 结论 |
+| --- | --- | --- |
+| 1 | 客户端 Script API 无 WebSocket / 任意文件写入 / localhost 网络访问 | 「游戏内每 10 tick 直连本地 WS」在单人客户端**不成立**，必须由平台侧桥接；该链路**未经真机验证** |
+| 2 | FOV / near / far / 实体包围盒 / 视锥无公开读取接口 | 采集帧恒 `null` / `Unavailable`；用猜测值填充被判 `denied`；小地图是 2D **正交投影**，不是游戏视锥 |
+| 3 | `@minecraft/server-graphics` 仅 Vibrant Visuals 大气散射参数；Deferred/PBR/点光源/体积雾/色调映射/SSR 是实验性资源包配置 | 全部标 `beta`，`runtimeEffect=false`，需实验开关且不承诺跨设备；不是运行时光照 API |
+
+### 模块标签与证据
+
+模块内用 `stable / beta / unsupported` 三个轻量标签，映射到项目七态：
+
+| 标签 | 项目状态 | 证据上限 | 硬规则 |
+| --- | --- | --- | --- |
+| `stable` | `Stable` / `BuildTimeOnly` | E4 | 只能 `platform-side`；必须有自动化测试 |
+| `beta` | `Experimental` / `PlatformRestricted` | E2 | 不得标项目 `Stable`；写明未经真机验证 |
+| `unsupported` | `Unavailable` | E0/E1 | 必须有审计理由；不提供可调用实现 |
+
+32 行能力审计表见 [`loom-v2/render-intent/docs/14-render-intent.md`](loom-v2/render-intent/docs/14-render-intent.md)：
+`stable 13 / beta 10 / unsupported 9`，TS 契约表与 JS 可运行表**逐行一致**（测试断言）。
+其中 `stable` 条目全部是 `platform-side`（文件管道、SSE、WS、意图提交、Canvas 合成、构建期资源生成）。
+
+### 与 v2.0 的关系（口径不变）
+
+- **零覆盖**：`mod/` 40 文件、`core/`、`services/`、`contracts/`、`schemas/`、`manager/`、`docs/00–17` 全部不改；纯新增 `render-intent/` 与 `docs/18-render-intent.md`。
+- **`Stable 20` 不变**：本层 `stable` 是模块内标签，独立登记，**不并入** `docs/03` 的项目级 API 状态总表；不新增任何「游戏内渲染介入」的 `Stable` 接口。
+- **十阶段合同不变**：`ResourceBuild` 新增的介入点是「平台侧生成公开资源包文件」，仍为**间接影响**，不升级为「直接控制」。
+- **版本化**：整体 `@since 2.1.0`，无 `@deprecated`、无需旧接口适配器或迁移脚本。
+
+### 可运行入口
+
+```bash
+cd BedrockLoom/loom-v2
+node render-intent/demo/serve.mjs        # 本机总线：/health /capabilities /intents.jsonl /events /intent
+# 浏览器打开 render-intent/demo/overlay.html —— 不启动服务也能播放内置合成演示
+```
+
+演示页与 `serve.mjs` 默认注入 `synthetic-demo` **合成数据，非真机采集**；页面顶部固定展示边界声明。
+自动化测试覆盖意图/帧校验、能力表双表一致、文件与本地总线往返、真实 WS 回放、合成器投影、
+资源包构建期绑定、演示页内联脚本**实际执行**（vm + DOM stub）与静态负向扫描，见
+[`loom-v2/EVIDENCE.md`](loom-v2/EVIDENCE.md) §4.1。
+
+## 15. 许可证与免责
 
 本项目采用 [MIT License](LICENSE)。
 
 Minecraft、Mojang、Microsoft 及相关商标归其各自所有者所有。本项目**不是**官方产品，未经 Mojang / Microsoft 认可或授权；不包含、不修改、不重分发国际版游戏二进制、网易 SDK 或任何游戏文件。任何试图通过二进制注入、私有内存读取、Hook 未公开函数、绕过签名 / 沙箱 / 审核来实现本仓库标记为 `Unavailable` 能力的做法，**不属于本项目范围，且被明确拒绝**。
 
-## 15. 参考
+## 16. 参考
 
 官方 changelog、Microsoft Learn Script API 文档、Minecraft Wiki 等逐条来源与核对日期，见 [`loom-v2/docs/06-international-capability.md`](loom-v2/docs/06-international-capability.md) 的 S1–S10 来源表。本仓库不引用 Java 版或网易版证据来支撑国际版结论。

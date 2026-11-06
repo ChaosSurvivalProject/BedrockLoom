@@ -18,3 +18,7 @@ loom-v2/examples/demo-private-key.pem
 
 # 发布压缩包由 GitHub Releases 提供，不重复入库
 /*.zip
+
+# 渲染意图层本机总线运行时产物（由 demo/serve.mjs 生成，不入库）
+loom-v2/runtime/intent.jsonl
+loom-v2/runtime/*.jsonl

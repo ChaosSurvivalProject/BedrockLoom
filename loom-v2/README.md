@@ -78,6 +78,31 @@ node -e "import('./core/resolver.mjs').then(m=>console.log(m.resolveLoadOrder(..
 - 真机验收、各设备与各存档方式、全部画面结果、视觉黄金测试、E3/E4/E5 证据均标 **未验证**，
   补齐步骤见 [docs/13-testing-and-budgets.md](docs/13-testing-and-budgets.md)。
 
+## v2.1.0 新增：渲染意图层（Render-Intent Bus）
+
+> **本扩展不深入渲染管线，只深入渲染意图。** 1.21.130 官方没有「渲染管线直连接口」，
+> 不假装有 `render.drawTriangle()`，只做「渲染意图抽象 + 外部合成」。
+
+纯新增模块 `render-intent/`，零覆盖既有文件，整体 `@since 2.1.0`，无破坏性变更。
+
+| 项 | 内容 |
+|---|---|
+| 三层 | `platform-side`（外部 Canvas/窗口，E4 / `Stable`）、`in-game`（只采状态，E2 上限 / `Experimental`）、`custom-client`（默认关闭 / `Unavailable`） |
+| 契约层 | 6 个 `.ts`（`intent-types` / `collector` / `bus` / `compositor-api` / `pack-bridge` / `capability-table`），已纳入 `tsc --noEmit` |
+| 可运行核心 | `core/{intent,capability,compositor}.mjs` 纯逻辑；`runtime/{bus,pack-bridge}.mjs` 零第三方依赖（手写 RFC6455 WS + SSE + 文件管道，仅绑定 `127.0.0.1`） |
+| 能力审计 | 32 行表，标签 `stable 13 / beta 10 / unsupported 9`；TS 表与 JS 表逐行一致（测试断言） |
+| 单文件演示 | `render-intent/demo/overlay.html`：直接双击即可离线播放；优先 WS → 降级 SSE → 内置合成演示；Canvas 小地图 + 监控屏 + 能力边界表 |
+| 一键总线 | `node render-intent/demo/serve.mjs`（合成演示数据，**非真机采集**） |
+| 边界表 | [`render-intent/docs/14-render-intent.md`](render-intent/docs/14-render-intent.md)（能力审计表 / 链路图 / 补充说明） |
+| 主文档补充 | [`docs/18-render-intent.md`](docs/18-render-intent.md)：v2.0 的 `Stable 20` 与十阶段合同**均不变** |
+
+**诚实边界**：客户端 Script API 无 WebSocket / 文件写入能力，「游戏内每 10 tick 直连本地 WS」在单人客户端不成立，
+需平台侧桥接（**未经真机验证**）；FOV / near / far / 包围盒不可读，恒 `null`；演示页默认是合成数据，
+不是游戏内画面。详见 [`render-intent/docs/00-design-freeze.md`](render-intent/docs/00-design-freeze.md)。
+
+自动化测试从 10 文件 / 80 用例提升到 **11 文件 / 116 用例 / 116 通过**，新增 `test/render-intent.test.mjs`
+（36 例，含演示页内联脚本在隔离上下文**实际执行**、能力表双表一致、真实 WS 回放、静态负向扫描）。
+
 ## 禁止事项（本仓库不出现）
 
 修改/注入国际版游戏二进制、读取私有内存或固定偏移、Hook 未公开函数、绕过签名/版权/沙箱/审核、

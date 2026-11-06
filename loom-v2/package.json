@@ -1,15 +1,16 @@
 {
   "name": "bedrock-loom-v2",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": true,
   "type": "module",
-  "description": "Bedrock Loom v2：既有项目的审查与扩展（零覆盖），平台侧能力可自动验证。",
+  "description": "Bedrock Loom v2.1：既有项目的零覆盖扩展，新增渲染意图层（Render-Intent Bus）与外部合成器；平台侧能力可自动验证。",
   "scripts": {
     "build:examples": "node services/build-example-pack.mjs",
     "migrate": "node services/migrate-v1-to-v2.mjs",
     "test": "node --test test/",
     "evidence": "node test/run-evidence.mjs",
-    "typecheck": "tsc --noEmit -p contracts/tsconfig.json"
+    "typecheck": "tsc --noEmit -p contracts/tsconfig.json",
+    "render-intent:serve": "node render-intent/demo/serve.mjs"
   },
   "engines": { "node": ">=22" }
 }

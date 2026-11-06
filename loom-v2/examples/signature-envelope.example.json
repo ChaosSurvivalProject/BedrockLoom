@@ -3,7 +3,7 @@
   "algorithm": "Ed25519",
   "keyId": "loom-demo-ed25519",
   "signedBy": "Bedrock Loom Demo",
-  "signedAt": "2026-11-06T04:01:11.779Z",
+  "signedAt": "2026-11-06T06:35:37.795Z",
   "canonicalization": {
     "method": "json-key-sorted-utf8",
     "newline": "LF",
@@ -12,7 +12,7 @@
   "protected": [
     {
       "path": "manifest.json",
-      "sha256": "227a316443e8adb254f97fd9846695aaf1633cca8dd4bdf399a58ddbd9c3a008",
+      "sha256": "c4b1d1df534ec2bf66eae03293912043dcf5fc65c16005040c704611700e31c8",
       "bytes": 13899
     },
     {
@@ -21,11 +21,11 @@
       "bytes": 3589
     }
   ],
-  "payloadHash": "c238e9330ab62acd73d69aee8d15c3a1cf2418e573adfdf5cfb548126b6fee67",
-  "signature": "P8h7JAZ9lt26QIuCJitf8Cwj5utNlH4SRszeQVQ03KM5nKuFnD6DmPvjrhoXQIBUC71OG2dVsF0IiduqVFmbBw==",
+  "payloadHash": "56f26b13e3393e0f5936af103eb0a81e664d09c3af7f0a9ab1dd87f551116c0e",
+  "signature": "zmwJ87cGZqIK09Uzd1SIfp/0M6EV3xf+4QWrGw4aA/d6P1xqGgIIS83h2zQ/1cn29LDoFPYqt+CniAjMIme7CA==",
   "trust": {
     "publisher": "Bedrock Loom Demo",
-    "keyFingerprint": "40bb524e884c6c61df6a9b82781a9779a321121739c3a5dc145f18cd6cd9d62c",
+    "keyFingerprint": "5bc935642ce6fc6d9f590b0f7116eb88364493af5c910f4d42b1e81851bb7fdb",
     "revoked": false
   }
 }

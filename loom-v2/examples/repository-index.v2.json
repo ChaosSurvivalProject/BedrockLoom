@@ -11,18 +11,18 @@
     "signatureKeys": [
       {
         "keyId": "loom-demo-ed25519",
-        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAJHK/K7xLFC4W9K7g4ylLJsiQmsnzQNdKVQuEIqdkh1I=\n-----END PUBLIC KEY-----\n",
-        "fingerprint": "40bb524e884c6c61df6a9b82781a9779a321121739c3a5dc145f18cd6cd9d62c",
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAlvVrRn+NSkY3s8Fxv7/BvMipE997slo+9tNLFLqjetI=\n-----END PUBLIC KEY-----\n",
+        "fingerprint": "5bc935642ce6fc6d9f590b0f7116eb88364493af5c910f4d42b1e81851bb7fdb",
         "validFrom": "2026-11-01T00:00:00.000Z",
         "validUntil": "2027-11-01T00:00:00.000Z"
       }
     ],
     "offlineCache": {
-      "cachedAt": "2026-11-06T04:01:11.780Z",
+      "cachedAt": "2026-11-06T06:35:37.795Z",
       "staleAfterHours": 72
     }
   },
-  "generatedAt": "2026-11-06T04:01:11.780Z",
+  "generatedAt": "2026-11-06T06:35:37.795Z",
   "sequence": 1,
   "delta": false,
   "entries": [
@@ -55,9 +55,9 @@
       "modId": "example.old_mod",
       "version": "0.9.0",
       "reason": "签名密钥轮换，旧包不再分发",
-      "revokedAt": "2026-11-06T04:01:11.780Z",
+      "revokedAt": "2026-11-06T06:35:37.795Z",
       "replacement": "example.old_mod@1.0.0"
     }
   ],
-  "indexSignature": "k9n5GXVEu3B2Tf9dpmWIQmH1s3cRI6e8O9+nsCA4/PUvqlxKci82sahpHo8/tLDNS7sa5KqBAQqndyJSUn/VBQ=="
+  "indexSignature": "EINWV6aJeJvLR/QaDrndMoEseTHDJHpjInGdYAeQ7GcZrIyRSLM58OkrBgt3VA4X0ajesQf0/tgiIEJ3b0wtBA=="
 }

@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<!--
+  BedrockLoom v2.1.0 · Render-Intent Bus 外部合成器演示（单文件、零依赖、可离线）
+  ============================================================================
+  这是什么：
+    一个「游戏外」的小地图 / 监控屏。所有像素都由本页浏览器 Canvas 绘制，
+    【不是】Minecraft 游戏内的画面，也【不】深入任何渲染管线。
+
+  数据来源的诚实说明（不要包装成游戏内直连）：
+    1. 国际版 1.21.130 客户端 Script API 【没有】WebSocket / 任意文件写入能力，
+       因此「游戏内脚本每 10 tick 直连 localhost WS」在单人客户端上不成立。
+    2. 真实链路是：collector/behavior-pack-collector.js 用公开 Script API 读状态，
+       经 World.setDynamicProperty 或平台侧桥接器 → 平台侧意图总线 → 本页。
+    3. 本页默认播放的是【合成演示帧】（synthetic-demo），用于零依赖自证；
+       启动 demo/serve.mjs 后，本页优先连本机 WS，失败降级 SSE，再失败保持演示。
+
+  连接优先级：WebSocket(127.0.0.1) → EventSource(/events) → 内置合成演示 / 导入 jsonl。
+  「不联网」定义：不访问任何外部域名或公网地址；127.0.0.1 是本机进程间回环。
+  直接双击本文件（file://）也能看到画面，因为逻辑全部内联，不 import 任何模块。
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BedrockLoom · 渲染意图外部合成器（离线演示）</title>
+<style>
+  :root{
+    --bg:#0b1016; --panel:#121a24; --panel2:#0f1620; --line:#233043;
+    --ink:#e6edf5; --dim:#8ba0b8; --accent:#39c0cf; --ok:#3fd08a;
+    --warn:#f0b454; --bad:#e8705f; --player:#39c0cf; --entity:#f0b454;
+    --anchor:#b58cff; --grid:#1c2836;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    font-size:13px;line-height:1.55}
+  header{padding:14px 20px;border-bottom:1px solid var(--line);
+    display:flex;flex-wrap:wrap;gap:12px;align-items:center;background:var(--panel2)}
+  h1{font-size:16px;margin:0;font-weight:650;letter-spacing:.3px}
+  .sub{color:var(--dim);font-size:12px}
+  .spacer{flex:1}
+  .badge{font-size:11px;padding:3px 9px;border-radius:99px;border:1px solid var(--line);
+    background:#0c141d;color:var(--dim);white-space:nowrap}
+  .badge b{color:var(--ink);font-weight:600}
+  .badge.live{border-color:#1d5c46;color:var(--ok)}
+  .badge.demo{border-color:#6a5320;color:var(--warn)}
+  .disclaimer{background:#241a12;border:1px solid #5a3f1c;color:#f3d39b;
+    padding:8px 20px;font-size:12px}
+  .wrap{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:14px;padding:14px 20px}
+  @media(max-width:920px){.wrap{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .card>h2{margin:0;padding:10px 14px;font-size:13px;font-weight:600;border-bottom:1px solid var(--line);
+    display:flex;align-items:center;gap:8px}
+  .card>h2 small{color:var(--dim);font-weight:400;font-size:11px}
+  .body{padding:12px 14px}
+  canvas{width:100%;display:block;background:#080d13;border:1px solid var(--line);border-radius:6px}
+  .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+  label{color:var(--dim);font-size:12px}
+  input[type=number],input[type=text]{background:#0a121b;border:1px solid var(--line);color:var(--ink);
+    border-radius:6px;padding:5px 8px;width:86px;font-family:inherit;font-size:12px}
+  button{background:#16283a;border:1px solid #2b4a63;color:var(--ink);border-radius:6px;
+    padding:5px 11px;cursor:pointer;font-family:inherit;font-size:12px}
+  button:hover{border-color:var(--accent)}
+  button.primary{background:#123a44;border-color:#1c6d78}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+  .stat{background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:8px 10px}
+  .stat .k{color:var(--dim);font-size:11px}
+  .stat .v{font-size:18px;font-weight:650;font-variant-numeric:tabular-nums}
+  .feed{max-height:230px;overflow:auto;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:11.5px;line-height:1.7}
+  .feed .row{border-bottom:1px dashed #1b2734;padding:2px 0;display:flex;gap:8px}
+  .feed .t{color:var(--dim);white-space:nowrap}
+  .tag{font-size:10px;padding:0 6px;border-radius:4px;border:1px solid var(--line);white-space:nowrap}
+  .tag.frame{color:var(--accent);border-color:#1c5b63}
+  .tag.hud{color:var(--ok);border-color:#1d5c46}
+  .tag.overlay{color:var(--anchor);border-color:#4a3674}
+  .tag.anchor{color:var(--anchor);border-color:#4a3674}
+  .tag.texture{color:var(--warn);border-color:#6a5320}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--dim);font-weight:600;font-size:11px}
+  .yes{color:var(--ok)} .no{color:var(--bad)} .mid{color:var(--warn)}
+  .foot{color:var(--dim);font-size:11px;padding:6px 20px 22px}
+  code{background:#0a121b;border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:11px}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;color:var(--dim);font-size:11px}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>BedrockLoom · 渲染意图外部合成器</h1>
+    <div class="sub">Render-Intent Bus → 平台侧 2D 合成 · v2.1.0 · 零依赖单文件</div>
+  </div>
+  <div class="spacer"></div>
+  <div class="badge" id="srcBadge">数据源：<b>内置合成演示</b></div>
+  <div class="badge" id="connBadge">连接：<b>尝试中…</b></div>
+  <div class="badge">基线 <b>1.21.130 国际版</b></div>
+</header>
+
+<div class="disclaimer">
+  <b>边界声明：</b>本页所有像素由浏览器 Canvas 绘制，是<strong>游戏外</strong>画面，不是 Minecraft 游戏内渲染结果；
+  本扩展<strong>不深入渲染管线，只深入渲染意图</strong>。游戏内脚本无法直连 WS，真实链路需平台侧桥接（见 <code>collector/</code>）。
+  默认播放的是<strong>合成演示数据，非真机采集</strong>；FOV / near / far 与实体包围盒官方不可读，一律不伪造。
+</div>
+
+<div class="wrap">
+  <!-- 左：小地图 -->
+  <section class="card">
+    <h2>◈ 游戏外小地图 <small>平台侧 2D 正交投影 · 非游戏视锥</small></h2>
+    <div class="body">
+      <canvas id="map" width="640" height="400"></canvas>
+      <div class="legend">
+        <span><i class="dot" style="background:var(--player)"></i>相机/玩家</span>
+        <span><i class="dot" style="background:var(--entity)"></i>实体</span>
+        <span><i class="dot" style="background:var(--anchor)"></i>世界锚点</span>
+        <span><i class="dot" style="background:#37506b"></i>半径裁剪圈</span>
+      </div>
+      <div class="controls">
+        <label>投影半径 <input type="number" id="radius" value="48" min="8" max="256"></label>
+        <label>本机端口 <input type="number" id="port" value="8787" min="1" max="65535"></label>
+        <button class="primary" id="btnConnect">重连总线</button>
+        <button id="btnPlay">⏸ 暂停演示</button>
+        <button id="btnImport">导入 .jsonl</button>
+        <input type="file" id="file" accept=".jsonl,.json,.txt" style="display:none">
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="k">采集帧</div><div class="v" id="sFrames">0</div></div>
+        <div class="stat"><div class="k">意图条数</div><div class="v" id="sIntents">0</div></div>
+        <div class="stat"><div class="k">裁剪点数</div><div class="v" id="sClipped">0</div></div>
+        <div class="stat"><div class="k">丢弃过期</div><div class="v" id="sDropped">0</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 右：监控屏 -->
+  <section class="card">
+    <h2>▤ 意图监控屏 <small>HUD 文本 / 意图流 / 七态结果</small></h2>
+    <div class="body">
+      <canvas id="screen" width="560" height="150"></canvas>
+      <div class="feed" id="feed"></div>
+    </div>
+  </section>
+</div>
+
+<!-- 能力边界表 -->
+<section class="card" style="margin:0 20px">
+  <h2>◧ 能力边界表 <small>stable / beta / unsupported</small></h2>
+  <div class="body">
+    <table>
+      <thead><tr><th style="width:14%">层</th><th style="width:22%">能（本扩展范围）</th><th>不能（明确拒绝）</th><th style="width:12%">标签</th></tr></thead>
+      <tbody>
+        <tr><td><b>platform-side</b><br><span class="sub">外部进程/网页</span></td>
+          <td class="yes">HUD、叠加层、动态贴图、小地图投影、Canvas/WebGL 绘制、PNG 导出、透明窗口/第二屏</td>
+          <td class="no">—（合成器自己画布内可自由绘制）</td><td class="yes">stable</td></tr>
+        <tr><td><b>in-game</b><br><span class="sub">Script API + 资源包</span></td>
+          <td class="mid">只读采集相机位置/朝向、实体列表与位置、区块采样；构建期生成纹理与资源定义；HUD 表单；粒子/音效提交</td>
+          <td class="no">直连 WS / 写文件；读取 FOV·near·far·包围盒；运行时替换已加载纹理；实时 IK；视锥</td><td class="mid">beta</td></tr>
+        <tr><td><b>custom-client</b><br><span class="sub">需正式授权</span></td>
+          <td class="no">—（本仓库不实现，默认关闭）</td>
+          <td class="no">直接画三角形、改 shader / material.bin、控深度缓冲、截帧注入、Hook Present、读游戏帧缓冲、私有内存/固定偏移</td><td class="no">unsupported</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<div class="foot">
+  链路：<code>loom.render.*（采集，只出数据）</code> → <code>平台侧桥接</code> → <code>bus: file / SSE / WS（127.0.0.1）</code>
+  → <code>compositor（本页 Canvas，出像素）</code> → 可选 <code>loom.pack.bindTexture（构建期回写资源包）</code>。
+  权威校验与七态结果见 <code>render-intent/core/*.mjs</code> 与 <code>test/render-intent.test.mjs</code>；本页为同构内联演示。
+  启动实时源：<code>node render-intent/demo/serve.mjs</code>。
+</div>
+
+<script>
+"use strict";
+/* =========================================================================
+   内联实现（不 import 任何模块，保证 file:// 双击可运行）
+   与 render-intent/core/{intent,compositor}.mjs 契约同构：
+     - 七态结果：ok/partial/unsupported/denied/timeout/resource-exhausted/degraded
+     - 意图批量化：按 batchKey 合并 + 过期丢弃
+     - 2D 正交投影：不使用 FOV/near/far，不伪装成游戏视锥
+   ========================================================================= */
+
+const $ = (id) => document.getElementById(id);
+const INTENT_SCHEMA = "bedrockloom.render-intent/v1";
+const FRAME_SCHEMA  = "bedrockloom.collector.frame/v1";
+const ENVELOPE_SCHEMA = "bedrockloom.intent-envelope/v1";
+const DANGEROUS = /<script|on[a-z]+\s*=|javascript:|\beval\s*\(|\bFunction\s*\(/i;
+
+let frames = 0, intents = 0, clipped = 0, dropped = 0;
+let latestFrame = null;
+const hudByKey = new Map();          // batchKey → 最新 HUD 文本
+const feedRows = [];                 // 监控流
+let anchors = [];                    // world-anchor 意图登记
+let mode = "demo";                   // demo | ws | sse | imported
+let demoPlaying = true, demoTimer = null, demoTick = 0;
+let ws = null, es = null;
+
+/* ---------- 结果语义（与 core/result.mjs 同态，本页只用到判定） ---------- */
+const RESULT_STATUSES = ["ok","partial","unsupported","denied","timeout","resource-exhausted","degraded"];
+function ok(v){ return { status:"ok", value:v }; }
+function denied(code,msg){ return { status:"denied", code, message:msg }; }
+function degraded(v,reason,fallback){ return { status:"degraded", value:v, reason, fallback }; }
+
+/* ---------- 意图 / 帧校验（内联精简版，权威版在 core/intent.mjs） ---------- */
+function validateIntent(o){
+  if(!o || typeof o!=="object" || o.schema!==INTENT_SCHEMA) return denied("E_RI_BAD_SCHEMA","意图 schema 不匹配");
+  if(!["hud","texture-push","world-anchor","overlay"].includes(o.type)) return denied("E_RI_UNKNOWN_TYPE","未知意图类型");
+  if(typeof o.id!=="string" || !o.id) return denied("E_RI_BAD_ID","id 缺失");
+  if(!Number.isFinite(o.ttlMs) || o.ttlMs<=0) return denied("E_RI_BAD_TTL","ttlMs 非法");
+  const p=o.payload;
+  if(!p || typeof p!=="object") return denied("E_RI_BAD_PAYLOAD","payload 必须是对象");
+  if(o.type==="hud"){
+    if(!p.content || typeof p.content.data!=="string") return denied("E_RI_BAD_CONTENT","HUD 内容缺失");
+    if(DANGEROUS.test(p.content.data)) return denied("E_RI_UNSAFE_CONTENT","意图含可执行片段，拒绝");
+  }
+  if(o.type==="overlay" && !(Number.isFinite(p.opacity)&&p.opacity>=0&&p.opacity<=1))
+    return denied("E_RI_BAD_OPACITY","opacity 必须在 0..1");
+  return ok(o);
+}
+function validateFrame(o){
+  if(!o || o.schema!==FRAME_SCHEMA) return denied("E_RI_FRAME_SCHEMA","帧 schema 不匹配");
+  if(!Array.isArray(o.entities)) return denied("E_RI_FRAME_ENTITIES","entities 必须是数组");
+  for(const e of o.entities){
+    if(e.bounds!==null && e.bounds!==undefined) return denied("E_RI_FRAME_BOUNDS","包围盒官方不可读，必须为 null");
+  }
+  if(o.camera){
+    for(const k of ["fovDegrees","near","far"])
+      if(o.camera[k]!==null && o.camera[k]!==undefined)
+        return denied("E_RI_CAM_UNREADABLE",k+" 官方不可读，不得用猜测值填充");
+  }
+  return ok(o);
+}
+const isExpired=(it,now)=> now > Date.parse(it.createdAt)+it.ttlMs;
+
+/* ---------- 总线输入：统一入口，先校验再入画 ---------- */
+function acceptEnvelope(env,now){
+  if(!env || env.schema!==ENVELOPE_SCHEMA) return;
+  const payload=env.payload;
+  if(env.channel==="frame"){
+    const r=validateFrame(payload);
+    if(r.status!=="ok"){ log(`[denied] 帧被拒绝：${r.code}`, "overlay"); return; }
+    latestFrame=r.value; frames++;
+    log(`帧 #${env.seq} · ${r.value.entities.length} 实体 · ${r.value.source}`, "frame");
+  }else if(env.channel==="intent"){
+    if(isExpired(payload,now)){ dropped++; log(`[degraded] 意图 ${payload.id} 过期已丢弃`, "overlay"); return; }
+    const r=validateIntent(payload);
+    if(r.status!=="ok"){ log(`[denied] 意图被拒绝：${r.code}`, "overlay"); return; }
+    intents++;
+    applyIntent(r.value);
+    log(`意图 ${payload.type} · ${payload.id}`, payload.type);
+  }
+  render();
+}
+function applyIntent(it){
+  const p=it.payload;
+  if(it.type==="hud"){
+    const key=p.batchKey || it.id;
+    hudByKey.set(key, p.content.data);          // 高频 HUD 按 batchKey 合并，只保留最新
+  }else if(it.type==="world-anchor"){
+    anchors=anchors.filter(a=>a.id!==p.anchorId);
+    anchors.push({ id:p.anchorId, position:p.position });
+  }
+  // overlay / texture-push：登记到监控流即可，不注入任何游戏内画面
+}
+
+/* ---------- 监控流 ---------- */
+function log(text,tag){
+  const t=new Date().toLocaleTimeString("zh-CN",{hour12:false});
+  feedRows.unshift({t,text,tag:tag||"frame"});
+  if(feedRows.length>60) feedRows.pop();
+  const el=$("feed");
+  el.innerHTML=feedRows.map(r=>`<div class="row"><span class="t">${r.t}</span><span class="tag ${r.tag}">${esc(r.tag)}</span><span>${esc(r.text)}</span></div>`).join("");
+}
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+/* ---------- 2D 正交投影（与 core/compositor.mjs projectMinimap 同构） ---------- */
+function projectMinimap(radius,vw,vh){
+  if(!latestFrame || !latestFrame.camera)
+    return degraded(null,"没有采集帧，不会用猜测值伪造中心点","等待采集帧");
+  const c=latestFrame.camera.position, hw=vw/2, hh=vh/2;
+  const proj=(p)=>({ x:hw+(p.x-c.x)/radius*hw, y:hh+(p.z-c.z)/radius*hh,
+    visible:Math.abs((p.x-c.x)/radius)<=1 && Math.abs((p.z-c.z)/radius)<=1 });
+  const pts=[{ id:"player", ...proj(c), kind:"player" }];
+  for(const e of latestFrame.entities) pts.push({ id:e.id, ...proj(e.position), kind:"entity" });
+  for(const a of anchors) pts.push({ id:a.id, ...proj(a.position), kind:"anchor" });
+  return degraded({ center:c, radius, points:pts, clippedCount:pts.filter(p=>!p.visible).length },
+    "正交投影不是游戏视锥；FOV / near / far 官方不可读","按半径裁剪的 2D 小地图");
+}
+
+/* ---------- Canvas 绘制 ---------- */
+function drawMap(){
+  const cv=$("map"), ctx=cv.getContext("2d");
+  const W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H);
+  // 网格
+  ctx.strokeStyle="#16212e";ctx.lineWidth=1;
+  for(let x=0;x<=W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<=H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  const radius=Number($("radius").value)||48;
+  const r=projectMinimap(radius,W,H);
+  if(r.status!=="degraded" || !r.value){ return; }
+  clipped=r.value.clippedCount;
+  // 半径裁剪圈
+  ctx.strokeStyle="#2b425c";ctx.setLineDash([6,6]);ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.arc(W/2,H/2,Math.min(W,H)/2-14,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+  // 坐标轴
+  ctx.strokeStyle="#22344a";ctx.beginPath();ctx.moveTo(0,H/2);ctx.lineTo(W,H/2);ctx.moveTo(W/2,0);ctx.lineTo(W/2,H);ctx.stroke();
+  // 点位
+  for(const p of r.value.points){
+    if(!p.visible) continue;
+    const col=p.kind==="player"?"#39c0cf":p.kind==="anchor"?"#b58cff":"#f0b454";
+    ctx.fillStyle=col;ctx.beginPath();ctx.arc(p.x,p.y,p.kind==="player"?7:5,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle="#08101a";ctx.lineWidth=2;ctx.stroke();
+    ctx.fillStyle="#9fb4cc";ctx.font="11px ui-monospace,monospace";
+    ctx.fillText(p.kind==="player"?"相机":p.id, p.x+9, p.y+3);
+  }
+  // 角标
+  ctx.fillStyle="#6b829c";ctx.font="12px ui-monospace,monospace";
+  ctx.fillText(`正交投影 · r=${radius} · 裁剪 ${clipped}`, 10, 18);
+  ctx.fillText("FOV/near/far = null（不可读）", 10, H-12);
+}
+function drawScreen(){
+  const cv=$("screen"),ctx=cv.getContext("2d"),W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle="#0a141d";ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle="#1c3340";ctx.strokeRect(.5,.5,W-1,H-1);
+  ctx.fillStyle="#39c0cf";ctx.font="600 13px -apple-system,sans-serif";
+  ctx.fillText("外部 HUD（浏览器像素 · 非游戏内 ScreenDisplay）",14,24);
+  ctx.font="12px ui-monospace,monospace";
+  let y=48;
+  const texts=[...hudByKey.values()];
+  if(texts.length===0){ ctx.fillStyle="#6b829c";ctx.fillText("暂无 HUD 意图（等待合成器提交）",14,y); }
+  for(const t of texts.slice(0,5)){ ctx.fillStyle="#dbe7f2";ctx.fillText("· "+t,14,y);y+=20; }
+  ctx.fillStyle="#6b829c";ctx.font="11px ui-monospace,monospace";
+  ctx.fillText(`HUD 合并键 ${hudByKey.size} 个 · 七态结果 ${RESULT_STATUSES.length} 种`,14,H-12);
+}
+function render(){ drawMap(); drawScreen();
+  $("sFrames").textContent=frames; $("sIntents").textContent=intents;
+  $("sClipped").textContent=clipped; $("sDropped").textContent=dropped;
+}
+
+/* ---------- 内置合成演示（零依赖、file:// 也能跑） ---------- */
+function demoFrame(t){
+  const a=(t/20)%(Math.PI*2);
+  return {
+    schema:FRAME_SCHEMA, tick:t, capturedAt:new Date().toISOString(),
+    camera:{ schema:"bedrockloom.collector.camera/v1", tick:t, capturedAt:new Date().toISOString(),
+      dimensionId:"minecraft:overworld",
+      position:{x:Math.cos(a)*18,y:64,z:Math.sin(a)*18},
+      viewDirection:{x:-Math.sin(a),y:0,z:Math.cos(a)}, rotation:{x:0,y:(a*180/Math.PI)%360},
+      fovDegrees:null, near:null, far:null },
+    entities:[
+      {id:"e-zombie",position:{x:8,y:64,z:6},bounds:null},
+      {id:"e-villager",position:{x:-14,y:64,z:-10},bounds:null},
+      {id:"e-sheep",position:{x:22,y:64,z:-4},bounds:null}
+    ],
+    source:"synthetic-demo", caveats:["FOV/near/far 不可读","包围盒不可读","合成演示，非真机"]
+  };
+}
+function demoIntent(t){
+  return { schema:INTENT_SCHEMA, id:`ri-demo-${t}`, createdAt:new Date().toISOString(),
+    ttlMs:3000, sourceLayer:"platform-side", type:"hud",
+    payload:{ elementId:"hud-status", rect:{x:12,y:12,w:280,h:26},
+      content:{kind:"text",data:`帧 ${t} · 外部合成器（非游戏内绘制）`},
+      anchor:"safe-area", batchKey:"status" } };
+}
+function startDemo(){
+  if(demoTimer) return;
+  demoTimer=setInterval(()=>{
+    if(!demoPlaying || (mode!=="demo")) return;
+    demoTick++;
+    acceptEnvelope({schema:ENVELOPE_SCHEMA,seq:demoTick,channel:"frame",payload:demoFrame(demoTick)},Date.now());
+    if(demoTick%3===0)
+      acceptEnvelope({schema:ENVELOPE_SCHEMA,seq:demoTick,channel:"intent",payload:demoIntent(demoTick)},Date.now());
+  },500);
+  setSource("demo");
+  log("内置合成演示启动（每 500ms ≈ 每 10 tick 一帧）","frame");
+}
+function stopDemo(){ if(demoTimer){clearInterval(demoTimer);demoTimer=null;} }
+
+/* ---------- 数据源状态与连接优先级：WS → SSE → 内置演示 ---------- */
+function setSource(m){
+  mode=m;
+  const b=$("srcBadge"),c=$("connBadge");
+  const label={ws:"本机 WebSocket（实时）",sse:"本机 SSE（实时）",imported:"导入的 .jsonl",demo:"内置合成演示"}[m];
+  b.className="badge "+(m==="ws"||m==="sse"?"live":"demo");
+  b.innerHTML=`数据源：<b>${label}</b>`;
+  c.className="badge "+(m==="ws"||m==="sse"?"live":"demo");
+  c.innerHTML=`连接：<b>${m==="ws"?"WS 已连接":m==="sse"?"SSE 已连接":m==="imported"?"本地文件":"未连接（离线演示）"}</b>`;
+}
+function trySse(port){
+  try{
+    es=new EventSource(`http://127.0.0.1:${port}/events`);
+    let got=false;
+    const timer=setTimeout(()=>{ if(!got){ es.close();es=null; log("SSE 无数据，保持内置合成演示","overlay"); setSource("demo"); startDemo(); } },2600);
+    es.onmessage=(ev)=>{
+      try{
+        const d=JSON.parse(ev.data);
+        if(d && d.type==="hello"){ got=true;clearTimeout(timer);stopDemo();setSource("sse");
+          log("已连接本机 SSE /events（实时源）","frame"); return; }
+        got=true;clearTimeout(timer);
+        if(mode!=="sse"){ stopDemo();setSource("sse"); }
+        acceptEnvelope(d,Date.now());
+      }catch(e){ log("SSE 数据无法解析，已忽略","overlay"); }
+    };
+    es.onerror=()=>{ clearTimeout(timer); es.close();es=null;
+      if(mode!=="demo"){ setSource("demo");startDemo();log("SSE 断开，降级为内置演示","overlay"); } };
+  }catch(e){ setSource("demo"); startDemo(); }
+}
+function connect(){
+  const port=Number($("port").value)||8787;
+  stopDemo();
+  if(ws){try{ws.close();}catch(e){} ws=null;}
+  if(es){try{es.close();}catch(e){} es=null;}
+  $("connBadge").innerHTML="连接：<b>尝试 WS…</b>";
+  let settled=false;
+  try{
+    ws=new WebSocket(`ws://127.0.0.1:${port}/`);
+    const timer=setTimeout(()=>{ if(!settled){ settled=true;
+      try{ws.close();}catch(e){} ws=null; log("WS 不可用，降级 SSE","overlay"); trySse(port); } },2200);
+    ws.onopen=()=>{ settled=true;clearTimeout(timer);stopDemo();setSource("ws");
+      log("已连接本机 WS（实时源，非公网）","frame"); };
+    ws.onmessage=(ev)=>{ try{ acceptEnvelope(JSON.parse(ev.data),Date.now()); }catch(e){ log("WS 数据无法解析，已忽略","overlay"); } };
+    ws.onerror=()=>{};
+    ws.onclose=()=>{ if(settled && mode==="ws"){ setSource("demo");startDemo();log("WS 断开，降级为内置演示","overlay"); } };
+  }catch(e){ trySse(port); }
+}
+
+/* ---------- 导入本地 .jsonl（FileReader，不使用 fetch） ---------- */
+function importFile(file){
+  const r=new FileReader();
+  r.onload=()=>{
+    stopDemo(); if(ws){try{ws.close();}catch(e){}} if(es){try{es.close();}catch(e){}}
+    setSource("imported");
+    let n=0;
+    for(const line of String(r.result).split("\n")){
+      if(!line.trim()) continue;
+      try{ acceptEnvelope(JSON.parse(line),Date.now()); n++; }
+      catch(e){ log("导入行无法解析，已跳过","overlay"); }
+    }
+    log(`已导入 ${n} 条信封（本地文件，未联网）`,"frame");
+  };
+  r.readAsText(file);
+}
+
+/* ---------- 事件绑定 ---------- */
+$("btnConnect").onclick=connect;
+$("btnPlay").onclick=()=>{ demoPlaying=!demoPlaying;
+  $("btnPlay").textContent=demoPlaying?"⏸ 暂停演示":"▶ 继续演示";
+  if(demoPlaying && mode==="demo") startDemo(); };
+$("btnImport").onclick=()=>$("file").click();
+$("file").onchange=(e)=>{ if(e.target.files[0]) importFile(e.target.files[0]); };
+$("radius").oninput=render;
+
+/* ---------- 启动：先立即进入演示（保证 file:// 有画面），同时后台尝试实时源 ---------- */
+setSource("demo");
+startDemo();
+render();
+// 后台尝试本机总线；连上会自动切换为实时源，连不上保持演示
+connect();
+</script>
+</body>
+</html>
