@@ -1,0 +1,43 @@
+# === 绝不入库：原版/改后游戏二进制与提取资源 ===
+*.bin
+*.apk
+*.appx
+*.apk.1
+*.exe
+*.dll
+*.so
+*.dylib
+*.pak
+*.obb
+material.bin
+**/extracted/
+**/game-assets/
+**/samples/
+**/dumps/
+
+# === 本机研究运行产物（可能含真实样本） ===
+**/runtime/*.jsonl
+**/intent.jsonl
+*.dmp
+*.trace
+
+# === 密钥 / 凭据 ===
+*.pem
+*private-key*
+gh_token
+askpass.sh
+.env
+.env.*
+
+# === 构建 / 依赖 / 日志 ===
+node_modules/
+dist/
+build/
+*.log
+
+# === 交付压缩包（由 Release 提供） ===
+*.zip
+
+# === 系统 ===
+.DS_Store
+Thumbs.db

@@ -1,0 +1,131 @@
+{
+  "schema": "bedrockloom.research.hook-candidates/v1",
+  "generated": "2026-11-06",
+  "grading": "low/medium/high 表示风险与侵入度，不表示可行性或实现难度",
+  "notice": "研究假设分类表，不是实现清单。全部条目 status=unsupported，本仓库无任何进程注入实现。",
+  "requiredTags": {
+    "layer": "host-private",
+    "classification": "research-hypothesis",
+    "drift": "version-drift-risk",
+    "status": "unsupported"
+  },
+  "candidates": [
+    {
+      "id": "H-PRESENT-01",
+      "category": "present",
+      "level": "low",
+      "layer": "host-private",
+      "classification": "research-hypothesis",
+      "drift": "version-drift-risk",
+      "status": "unsupported",
+      "abstractPoint": "进程外使用公开图形调试工具观察帧呈现时序；IDXGISwapChain::Present 是 Microsoft 公开 D3D COM 接口名，不是游戏私有符号",
+      "riskNote": "只产生时序统计，不进入游戏进程",
+      "verification": "需作者本机合法包与官方图形调试工具；本仓库仅记录该类别",
+      "implementedInRepo": false
+    },
+    {
+      "id": "H-PRESENT-02",
+      "category": "present",
+      "level": "medium",
+      "layer": "host-private",
+      "classification": "research-hypothesis",
+      "drift": "version-drift-risk",
+      "status": "unsupported",
+      "abstractPoint": "进程内只读地感知呈现回调发生",
+      "riskNote": "需进程内观察点，涉及平台运行时机制",
+      "verification": "需合法调试环境；本仓库不实现",
+      "implementedInRepo": false
+    },
+    {
+      "id": "H-PRESENT-03",
+      "category": "present",
+      "level": "high",
+      "layer": "host-private",
+      "classification": "research-hypothesis",
+      "drift": "version-drift-risk",
+      "status": "unsupported",
+      "abstractPoint": "介入呈现调用以叠加自绘内容（overlay 回灌）",
+      "riskNote": "改变呈现链路，与不绕沙箱/反作弊、不给改后成品冲突",
+      "verification": "永不实现（硬边界）",
+      "implementedInRepo": false
+    },
+    {
+      "id": "H-TEX-01",
+      "category": "texture-bind",
+      "level": "low",
+      "layer": "host-private",
+      "classification": "research-hypothesis",
+      "drift": "version-drift-risk",
+      "status": "unsupported",
+      "abstractPoint": "构建期统计资源包静态纹理的文件名/尺寸/哈希",
+      "riskNote": "纯文件元数据，不接触运行时；实际落在 B 合规层",
+      "verification": "有本机解包目录即可；parser/layout.mjs 已提供",
+      "implementedInRepo": false
+    },
+    {
+      "id": "H-TEX-02",
+      "category": "texture-bind",
+      "level": "medium",
+      "layer": "host-private",
+      "classification": "research-hypothesis",
+      "drift": "version-drift-risk",
+      "status": "unsupported",
+      "abstractPoint": "进程内只读观察纹理上传事件类别",
+      "riskNote": "依赖私有实现细节，版本漂移极大",
+      "verification": "需合法调试环境；本仓库不实现",
+      "implementedInRepo": false
+    },
+    {
+      "id": "H-TEX-03",
+      "category": "texture-bind",
+      "level": "high",
+      "layer": "host-private",
+      "classification": "research-hypothesis",
+      "drift": "version-drift-risk",
+      "status": "unsupported",
+      "abstractPoint": "运行时替换已提交纹理或写 material.bin",
+      "riskNote": "改后资源，可能触发完整性校验；主项目已判 Unavailable",
+      "verification": "永不实现（硬边界）",
+      "implementedInRepo": false
+    },
+    {
+      "id": "H-CAM-01",
+      "category": "camera-update",
+      "level": "low",
+      "layer": "host-private",
+      "classification": "research-hypothesis",
+      "drift": "version-drift-risk",
+      "status": "unsupported",
+      "abstractPoint": "用公开 Script API 读玩家位置/朝向做正交投影小地图",
+      "riskNote": "合规；但不是视锥，FOV/near/far 恒 null；实际落在 B 合规层",
+      "verification": "主项目 render-intent 采集器已实现",
+      "implementedInRepo": false
+    },
+    {
+      "id": "H-CAM-02",
+      "category": "camera-update",
+      "level": "medium",
+      "layer": "host-private",
+      "classification": "research-hypothesis",
+      "drift": "version-drift-risk",
+      "status": "unsupported",
+      "abstractPoint": "进程内只读采样视图/投影矩阵",
+      "riskNote": "私有内存布局，随版本与图形后端漂移",
+      "verification": "需合法调试环境；本仓库不实现",
+      "implementedInRepo": false
+    },
+    {
+      "id": "H-CAM-03",
+      "category": "camera-update",
+      "level": "high",
+      "layer": "host-private",
+      "classification": "research-hypothesis",
+      "drift": "version-drift-risk",
+      "status": "unsupported",
+      "abstractPoint": "改写相机矩阵或直接控制相机",
+      "riskNote": "等于控制渲染，属外挂/改后客户端范畴",
+      "verification": "永不实现（硬边界）",
+      "implementedInRepo": false
+    }
+  ]
+}
